@@ -241,7 +241,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   cubeRigidBody: {fileID: 1277577281}
-  clientCubeTransform: {fileID: 1804424181}
+  clientCube: {fileID: 1804424180}
 --- !u!4 &803758058
 Transform:
   m_ObjectHideFlags: 0
@@ -425,13 +425,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1201307566}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: -10}
+  m_LocalRotation: {x: 0.045635168, y: -0.8857168, z: 0.17299233, w: 0.42836538}
+  m_LocalPosition: {x: 5.18, y: 3.23, z: 5.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 20.215, y: -127.646, z: 4.117}
 --- !u!1 &1277577276
 GameObject:
   m_ObjectHideFlags: 0
