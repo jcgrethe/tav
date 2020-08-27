@@ -240,8 +240,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 982debb929dfa4e818c5cba0c83c6031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  cubeRigidBody: {fileID: 1277577281}
-  clientCube: {fileID: 1804424180}
+  pps: 10
+  requiredSnapshots: 2
+  cubeServer: {fileID: 1277577276}
+  cubeClient: {fileID: 1804424180}
 --- !u!4 &803758058
 Transform:
   m_ObjectHideFlags: 0
