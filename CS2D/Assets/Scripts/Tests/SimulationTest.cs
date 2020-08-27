@@ -89,7 +89,6 @@ public class SimulationTest : MonoBehaviour
                 commands.Deserialize(packet2.buffer);
                 if (commands.space)
                 {
-                    Debug.Log("SPACE: " + countSpace++);
                     cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
                 }
                 if (commands.up)
@@ -131,7 +130,6 @@ public class SimulationTest : MonoBehaviour
                 }
             }
         }
-        Debug.Log(commandServer.Count);
 
         while(commandServer.Count != 0)
         {
@@ -203,11 +201,15 @@ public class SimulationTest : MonoBehaviour
         commandServer.Add(command);
         if (Input.GetKeyDown(KeyCode.D))
         {
+            connected = false;
             channel2.Disconnect();
+            channel3.Disconnect();
         }
         if (Input.GetKeyDown(KeyCode.C))
         {
+            connected = true;
             channel2 = new Channel(9001);
+            channel3 = new Channel(9002);
         }
     }
 
