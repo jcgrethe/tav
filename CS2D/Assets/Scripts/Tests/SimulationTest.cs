@@ -14,12 +14,12 @@ public class SimulationTest : MonoBehaviour
     private float accum2 = 0f;
 
     private float clientTime = 0f;
-    public int pps = 10;
+    public int pps = 100;
     public int requiredSnapshots = 3;
     private int packetNumber = 0;
     private bool clientPlaying = false;
-
-
+    private bool connected = true;
+    private int countSpace = 0;
     [SerializeField] private GameObject cubeServer;
     [SerializeField] private GameObject cubeClient;
 
@@ -46,8 +46,12 @@ public class SimulationTest : MonoBehaviour
         accum += Time.deltaTime;
         accum2 += Time.deltaTime;
 
-        UpdateServer();
+        if (connected)
+        {
+            UpdateServer();
+        }
         UpdateClient();
+
     }
 
     private void UpdateServer()
@@ -75,37 +79,30 @@ public class SimulationTest : MonoBehaviour
         
         
         //receive input
-        var packet2 = channel2.GetPacket();
-        if (packet2 != null)
+        Packet packet2;
+        while ( (packet2 = channel2.GetPacket()) != null)
         {
-            List<Commands> commandsReceived = new List<Commands>();
+            int max = 0;
             int quantity = packet2.buffer.GetInt();
             for (int i = 0; i < quantity; i++){
                 var commands = new Commands();
                 commands.Deserialize(packet2.buffer);
-                commandsReceived.Add(commands);
-            }
-
-            var packet3 = Packet.Obtain();
-            int maxTime = 0;
-            foreach (var currentCommand in commandsReceived)
-            {
-                if (currentCommand.time > maxTime)
+                if (commands.space)
                 {
-                    maxTime = currentCommand.time;
-                }
-                if (currentCommand.space)
-                {
+                    Debug.Log("SPACE: " + countSpace++);
                     cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
                 }
-                if (currentCommand.up)
+                if (commands.up)
                 {
                     cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
                 }
+
+                max = commands.time;
             }
 
             //send ack
-            packet3.buffer.PutInt(maxTime);
+            var packet3 = Packet.Obtain();
+            packet3.buffer.PutInt(max);
             packet3.buffer.Flush();
             string serverIP = "127.0.0.1";
             int port = 9002;
@@ -118,21 +115,33 @@ public class SimulationTest : MonoBehaviour
     private void UpdateClient() {
         
         //delete from list
-        var packet3 = channel3.GetPacket();
-        if (packet3 != null)
+        Packet packet3; 
+        while ( (packet3=channel3.GetPacket()) != null)
         {
             var toDel = packet3.buffer.GetInt();
-            var i = 0;
-            while(commandServer.Count != 0)
+            while (commandServer.Count != 0)
             {
-              if (commandServer[0].time <= toDel)
-              {
-                  commandServer.RemoveAt(0);
-              }
-              else
-              {
-                  break;
-              }
+                if (commandServer[0].time <= toDel)
+                {
+                    commandServer.RemoveAt(0);
+                }
+                else
+                {
+                    break;
+                }
+            }
+        }
+        Debug.Log(commandServer.Count);
+
+        while(commandServer.Count != 0)
+        {
+            if (commandServer[0].timestamp < Time.time)
+            {
+                commandServer.RemoveAt(0);
+            }
+            else
+            {
+                break;
             }
         }
 
@@ -188,9 +197,18 @@ public class SimulationTest : MonoBehaviour
     
     private void ReadInput()
     {
+        var timeout = Time.time + 2;
         var command = new Commands(packetNumber, Input.GetKeyDown(KeyCode.UpArrow), Input.GetKeyDown(KeyCode.DownArrow),
-            Input.GetKeyDown(KeyCode.Space));
+            Input.GetKeyDown(KeyCode.Space), timeout);
         commandServer.Add(command);
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            channel2.Disconnect();
+        }
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            channel2 = new Channel(9001);
+        }
     }
 
     private void Interpolate() {

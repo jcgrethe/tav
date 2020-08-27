@@ -7,6 +7,7 @@ public class Commands
     public bool up;
     public bool down;
     public bool space;
+    public float timestamp;
 
     public Commands(int time, bool up, bool down, bool space)
     {
@@ -14,6 +15,15 @@ public class Commands
         this.up = up;
         this.down = down;
         this.space = space;
+    }
+    
+    public Commands(int time, bool up, bool down, bool space, float timestamp)
+    {
+        this.time = time;
+        this.up = up;
+        this.down = down;
+        this.space = space;
+        this.timestamp = timestamp;
     }
 
     public Commands()
