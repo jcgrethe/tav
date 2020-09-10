@@ -1,4 +1,5 @@
 
+using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 
@@ -10,19 +11,31 @@ public class CsServer
     private Channel channel3;
     private int pps;
     private float accum;
-    private GameObject cubeServer;
+    private List<GameObject> cubeServer;
     private int packetNumber;
-    public CsServer(Channel channel, Channel channel2, Channel channel3, int pps, GameObject cubeServer)
+    private float accum3;
+    private GameObject otherPlayer;
+    public CsServer(Channel channel, Channel channel2, Channel channel3, int pps, GameObject otherPlayer, GameObject player)
     {
         this.channel = channel;
         this.channel2 = channel2;
         this.channel3 = channel3;
         this.pps = pps;
-        this.cubeServer = cubeServer;
+        this.otherPlayer = otherPlayer;
+        cubeServer = new List<GameObject>();
+        cubeServer.Add(player);
+        cubeServer.Add(otherPlayer);
     }
 
     public void UpdateServer()
     {
+        accum3 += Time.deltaTime;
+        if (accum3 > 2)
+        {
+            otherPlayer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 5, otherPlayer.transform.position, ForceMode.Impulse);
+            accum3 = 0;
+        }
+        
         accum += Time.deltaTime;
         
         //send position
@@ -32,8 +45,13 @@ public class CsServer
             packetNumber += 1;
             //serialize
             var packet = Packet.Obtain();
-            var cubeEntity = new CubeEntity(cubeServer);
-            var snapshot = new Snapshot(packetNumber, cubeEntity);
+            var snapshot = new Snapshot(packetNumber);
+            foreach (var auxCubeEntity in cubeServer)
+            {
+                var cubeEntity = new CubeEntity(auxCubeEntity, auxCubeEntity.GetComponent<CubeId>().Id);
+                snapshot.Add(cubeEntity);
+            }
+            
             snapshot.Serialize(packet.buffer);
             packet.buffer.Flush();
 
@@ -58,11 +76,11 @@ public class CsServer
                 commands.Deserialize(packet2.buffer);
                 if (commands.space)
                 {
-                    cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
+                    cubeServer[0].GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
                 }
                 if (commands.up)
                 {
-                    cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
+                    cubeServer[0].GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
                 }
 
                 max = commands.commandNumber;

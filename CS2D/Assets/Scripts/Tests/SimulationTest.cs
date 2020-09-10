@@ -1,7 +1,9 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
+using Random = System.Random;
 
 public class SimulationTest : MonoBehaviour
 {
@@ -14,7 +16,7 @@ public class SimulationTest : MonoBehaviour
     
     private float accum = 0f;
     private float accum2 = 0f;
-
+    private float accum3 = 0f;
     private float clientTime = 0f;
     public int pps = 100;
     public int requiredSnapshots = 3;
@@ -25,9 +27,13 @@ public class SimulationTest : MonoBehaviour
     
     [SerializeField] private GameObject cubeClient;
     [SerializeField] private GameObject cubeServer;
+    [SerializeField] private GameObject otherPlayer;
+    [SerializeField] private GameObject otherPlayerClient;
+    private List<GameObject> clients;
 
     List<Snapshot> interpolationBuffer = new List<Snapshot>();
     List<Commands> commandServer = new List<Commands>();
+    private String id = "randomString";
 
     
     
@@ -36,7 +42,16 @@ public class SimulationTest : MonoBehaviour
         channel = new Channel(9000);
         channel2 = new Channel(9001);
         channel3 = new Channel(9002);
-        server = new CsServer(channel, channel2, channel3, pps, cubeServer);
+        cubeServer.GetComponent<CubeId>().Id = "1";
+        otherPlayer.GetComponent<CubeId>().Id = "2";
+
+        server = new CsServer(channel, channel2, channel3, pps, otherPlayer, cubeServer);
+        clients = new List<GameObject>();
+        clients.Add(cubeClient);
+        cubeClient.GetComponent<ClientId>().Id = cubeServer.GetComponent<CubeId>().Id;
+        clients.Add(otherPlayerClient);
+        otherPlayerClient.GetComponent<ClientId>().Id = otherPlayer.GetComponent<CubeId>().Id;
+
     }
 
     private void OnDestroy() {
@@ -49,7 +64,12 @@ public class SimulationTest : MonoBehaviour
     void Update() {
         accum += Time.deltaTime;
         accum2 += Time.deltaTime;
-
+        accum3 += Time.deltaTime;
+        if (accum3 > 2)
+        {
+            otherPlayer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 5, otherPlayer.transform.position, ForceMode.Impulse);
+            accum3 = 0;
+        }
         if (connected)
         {
             server.UpdateServer();
@@ -116,10 +136,8 @@ public class SimulationTest : MonoBehaviour
         //visual
         var packet = channel.GetPacket();
         if (packet != null) {
-            var cubeEntity = new CubeEntity(cubeClient);
-            var snapshot = new Snapshot(-1, cubeEntity);
             var buffer = packet.buffer;
-
+            var snapshot = new Snapshot(-1);
             snapshot.Deserialize(buffer);
 
             int size = interpolationBuffer.Count;
@@ -167,7 +185,7 @@ public class SimulationTest : MonoBehaviour
         var previousTime = (interpolationBuffer[0]).packetNumber * (1f/pps);
         var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
-        var interpolatedSnapshot = Snapshot.CreateInterpolated(interpolationBuffer[0], interpolationBuffer[1], t);
+        var interpolatedSnapshot = Snapshot.CreateInterpolated(interpolationBuffer[0], interpolationBuffer[1], t, clients);
         interpolatedSnapshot.Apply();
 
         if(clientTime > nextTime) {

@@ -1,39 +1,65 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Snapshot
 {
-    private CubeEntity cubeEntity;
+    private List<CubeEntity> cubeEntities;
     public int packetNumber;
 
-    public Snapshot(int packetNumber, CubeEntity cubeEntity)
+    public Snapshot(int packetNumber)
     {
-        this.cubeEntity = cubeEntity;
         this.packetNumber = packetNumber;
+        cubeEntities = new List<CubeEntity>();
+    }
+    
+    public Snapshot(int packetNumber, List<CubeEntity> cubeEntities)
+    {
+        this.packetNumber = packetNumber;
+        this.cubeEntities = cubeEntities;
+    }
+
+    public void Add(CubeEntity cubeEntity)
+    {
+        cubeEntities.Add(cubeEntity);
     }
     
     public void Serialize(BitBuffer buffer)
     {
         buffer.PutInt(packetNumber);
-        cubeEntity.Serialize(buffer);
+        buffer.PutInt(cubeEntities.Count);
+        foreach (var cubeEntity in cubeEntities)
+        {
+            cubeEntity.Serialize(buffer);
+        }
     }
     
     public void Deserialize(BitBuffer buffer)
     {
         packetNumber = buffer.GetInt();
-        cubeEntity.Deserialize(buffer);
+        var quatity = buffer.GetInt();
+        for (int i = 0; i < quatity; i++)
+        {
+            var cubeEntity = new CubeEntity();
+            cubeEntity.Deserialize(buffer);
+            cubeEntities.Add(cubeEntity);
+        }
+        
     }
     
-    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t)
+    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, List<GameObject> players)
     {
-        var cubeEntity = CubeEntity.createInterpolated(previous.cubeEntity, next.cubeEntity, t);
-        return new Snapshot(-1, cubeEntity);
+        var cubes = CubeEntity.createInterpolated(previous.cubeEntities, next.cubeEntities, t, players);
+        return new Snapshot(-1, cubes);
     }
 
     public void Apply()
     {
-        cubeEntity.Apply();
+        foreach (var cubeEntity in cubeEntities)
+        { 
+            cubeEntity.Apply();
+        }
     }
 
 }
