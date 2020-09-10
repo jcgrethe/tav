@@ -9,7 +9,9 @@ public class SimulationTest : MonoBehaviour
     private Channel channel;
     private Channel channel2;
     private Channel channel3;
-
+    private CsServer server;
+    
+    
     private float accum = 0f;
     private float accum2 = 0f;
 
@@ -20,8 +22,9 @@ public class SimulationTest : MonoBehaviour
     private bool clientPlaying = false;
     private bool connected = true;
     private int countSpace = 0;
-    [SerializeField] private GameObject cubeServer;
+    
     [SerializeField] private GameObject cubeClient;
+    [SerializeField] private GameObject cubeServer;
 
     List<Snapshot> interpolationBuffer = new List<Snapshot>();
     List<Commands> commandServer = new List<Commands>();
@@ -33,6 +36,7 @@ public class SimulationTest : MonoBehaviour
         channel = new Channel(9000);
         channel2 = new Channel(9001);
         channel3 = new Channel(9002);
+        server = new CsServer(channel, channel2, channel3, pps, cubeServer);
     }
 
     private void OnDestroy() {
@@ -48,67 +52,10 @@ public class SimulationTest : MonoBehaviour
 
         if (connected)
         {
-            UpdateServer();
+            server.UpdateServer();
         }
         UpdateClient();
 
-    }
-
-    private void UpdateServer()
-    {
-        //send position
-        float sendRate = (1f / pps);
-        if (accum >= sendRate)
-        {
-            packetNumber += 1;
-            //serialize
-            var packet = Packet.Obtain();
-            var cubeEntity = new CubeEntity(cubeServer);
-            var snapshot = new Snapshot(packetNumber, cubeEntity);
-            snapshot.Serialize(packet.buffer);
-            packet.buffer.Flush();
-
-            string serverIP = "127.0.0.1";
-            int port = 9000;
-            var remoteEp = new IPEndPoint(IPAddress.Parse(serverIP), port);
-            channel.Send(packet, remoteEp);
-            packet.Free();
-            // Restart accum
-            accum -= sendRate;
-        }
-        
-        
-        //receive input
-        Packet packet2;
-        while ( (packet2 = channel2.GetPacket()) != null)
-        {
-            int max = 0;
-            int quantity = packet2.buffer.GetInt();
-            for (int i = 0; i < quantity; i++){
-                var commands = new Commands();
-                commands.Deserialize(packet2.buffer);
-                if (commands.space)
-                {
-                    cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
-                }
-                if (commands.up)
-                {
-                    cubeServer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
-                }
-
-                max = commands.time;
-            }
-
-            //send ack
-            var packet3 = Packet.Obtain();
-            packet3.buffer.PutInt(max);
-            packet3.buffer.Flush();
-            string serverIP = "127.0.0.1";
-            int port = 9002;
-            var remoteEp = new IPEndPoint(IPAddress.Parse(serverIP), port);
-            channel.Send(packet3, remoteEp);
-            packet3.Free();
-        }
     }
 
     private void UpdateClient() {
@@ -120,7 +67,7 @@ public class SimulationTest : MonoBehaviour
             var toDel = packet3.buffer.GetInt();
             while (commandServer.Count != 0)
             {
-                if (commandServer[0].time <= toDel)
+                if (commandServer[0].commandNumber <= toDel)
                 {
                     commandServer.RemoveAt(0);
                 }
@@ -210,7 +157,10 @@ public class SimulationTest : MonoBehaviour
             connected = true;
             channel2 = new Channel(9001);
             channel3 = new Channel(9002);
+            server.updateChannels(channel2, channel3);
         }
+
+        packetNumber++;
     }
 
     private void Interpolate() {

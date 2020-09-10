@@ -3,23 +3,23 @@ using UnityEngine;
 public class Commands
 {
 
-    public int time;
+    public int commandNumber;
     public bool up;
     public bool down;
     public bool space;
     public float timestamp;
 
-    public Commands(int time, bool up, bool down, bool space)
+    public Commands(int commandNumber, bool up, bool down, bool space)
     {
-        this.time = time;
+        this.commandNumber = commandNumber;
         this.up = up;
         this.down = down;
         this.space = space;
     }
     
-    public Commands(int time, bool up, bool down, bool space, float timestamp)
+    public Commands(int commandNumber, bool up, bool down, bool space, float timestamp)
     {
-        this.time = time;
+        this.commandNumber = commandNumber;
         this.up = up;
         this.down = down;
         this.space = space;
@@ -33,7 +33,7 @@ public class Commands
 
     public void Serialize(BitBuffer buffer)
     {
-        buffer.PutInt(time);
+        buffer.PutInt(commandNumber);
         buffer.PutBit(up);
         buffer.PutBit(down);
         buffer.PutBit(space);
@@ -41,8 +41,7 @@ public class Commands
     
     public void Deserialize(BitBuffer buffer)
     {
-        
-        time = buffer.GetInt();
+        commandNumber = buffer.GetInt();
         up = buffer.GetBit();
         down = buffer.GetBit();
         space = buffer.GetBit();
