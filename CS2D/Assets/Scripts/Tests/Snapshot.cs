@@ -5,16 +5,16 @@ using UnityEngine;
 
 public class Snapshot
 {
-    private List<CubeEntity> cubeEntities;
+    public Dictionary<String, CubeEntity> cubeEntities;
     public int packetNumber;
 
     public Snapshot(int packetNumber)
     {
         this.packetNumber = packetNumber;
-        cubeEntities = new List<CubeEntity>();
+        cubeEntities = new Dictionary<string, CubeEntity>();
     }
     
-    public Snapshot(int packetNumber, List<CubeEntity> cubeEntities)
+    public Snapshot(int packetNumber, Dictionary<String, CubeEntity> cubeEntities)
     {
         this.packetNumber = packetNumber;
         this.cubeEntities = cubeEntities;
@@ -22,7 +22,7 @@ public class Snapshot
 
     public void Add(CubeEntity cubeEntity)
     {
-        cubeEntities.Add(cubeEntity);
+        cubeEntities.Add(cubeEntity.id, cubeEntity);
     }
     
     public void Serialize(BitBuffer buffer)
@@ -31,7 +31,7 @@ public class Snapshot
         buffer.PutInt(cubeEntities.Count);
         foreach (var cubeEntity in cubeEntities)
         {
-            cubeEntity.Serialize(buffer);
+            cubeEntity.Value.Serialize(buffer);
         }
     }
     
@@ -43,14 +43,14 @@ public class Snapshot
         {
             var cubeEntity = new CubeEntity();
             cubeEntity.Deserialize(buffer);
-            cubeEntities.Add(cubeEntity);
+            cubeEntities.Add(cubeEntity.id, cubeEntity);
         }
         
     }
     
-    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, List<GameObject> players)
+    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, Dictionary<String, GameObject> players)
     {
-        var cubes = CubeEntity.createInterpolated(previous.cubeEntities, next.cubeEntities, t, players);
+        var cubes = CubeEntity.createInterpolated(previous, next, t, players);
         return new Snapshot(-1, cubes);
     }
 
@@ -58,7 +58,7 @@ public class Snapshot
     {
         foreach (var cubeEntity in cubeEntities)
         { 
-            cubeEntity.Apply();
+            cubeEntity.Value.Apply();
         }
     }
 

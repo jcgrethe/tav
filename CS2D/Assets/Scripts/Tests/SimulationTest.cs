@@ -11,10 +11,12 @@ public class SimulationTest : MonoBehaviour
     private Channel channel;
     private Channel channel2;
     private Channel channel3;
+    private Channel channel4;
+    private Channel channel5;
+
     private CsServer server;
     
     
-    private float accum = 0f;
     private float accum2 = 0f;
     private float accum3 = 0f;
     private float clientTime = 0f;
@@ -25,51 +27,64 @@ public class SimulationTest : MonoBehaviour
     private bool connected = true;
     private int countSpace = 0;
     
-    [SerializeField] private GameObject cubeClient;
-    [SerializeField] private GameObject cubeServer;
-    [SerializeField] private GameObject otherPlayer;
-    [SerializeField] private GameObject otherPlayerClient;
-    private List<GameObject> clients;
+    public GameObject ClientPrefab;
+    public GameObject ServerPrefab;
+    private GameObject client;
+    
+    private Dictionary<String, GameObject> clients;
 
     List<Snapshot> interpolationBuffer = new List<Snapshot>();
     List<Commands> commandServer = new List<Commands>();
-    private String id = "randomString";
+    private bool join = false;
+    private bool waitJoin = true;
 
-    
     
     // Start is called before the first frame update
     void Start() {
-        channel = new Channel(9000);
-        channel2 = new Channel(9001);
-        channel3 = new Channel(9002);
-        cubeServer.GetComponent<CubeId>().Id = "1";
-        otherPlayer.GetComponent<CubeId>().Id = "2";
+        channel = new Channel(9000); //visual
+        channel2 = new Channel(9001); // input
+        channel3 = new Channel(9002); // ack input
+        channel4 = new Channel(9003); // join
+        channel5 = new Channel(9004); //ack join
 
-        server = new CsServer(channel, channel2, channel3, pps, otherPlayer, cubeServer);
-        clients = new List<GameObject>();
-        clients.Add(cubeClient);
-        cubeClient.GetComponent<ClientId>().Id = cubeServer.GetComponent<CubeId>().Id;
-        clients.Add(otherPlayerClient);
-        otherPlayerClient.GetComponent<ClientId>().Id = otherPlayer.GetComponent<CubeId>().Id;
-
+        server = new CsServer(channel, channel2, channel3, channel4, channel5, pps, this);
+        clients = new Dictionary<string, GameObject>();
+        JoinPlayer();
     }
 
     private void OnDestroy() {
         channel.Disconnect();
         channel2.Disconnect();
         channel3.Disconnect();
+        channel4.Disconnect();
     }
 
     // Update is called once per frame
+
+    public void JoinPlayer()
+    {
+        var client = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
+        client.name = "1";
+        client.GetComponent<CubeId>().Id = "1";
+        clients.Add("1", client);
+        var packet4 = Packet.Obtain();
+        packet4.buffer.PutString("1");
+        var cube = new CubeEntity(client, "1");
+        cube.Serialize(packet4.buffer);
+        packet4.buffer.Flush();
+
+        string serverIP = "127.0.0.1";
+        int port = 9003;
+        var remoteEp = new IPEndPoint(IPAddress.Parse(serverIP), port);
+        channel.Send(packet4, remoteEp);
+        packet4.Free();
+    }
+
+
     void Update() {
-        accum += Time.deltaTime;
+        
+        
         accum2 += Time.deltaTime;
-        accum3 += Time.deltaTime;
-        if (accum3 > 2)
-        {
-            otherPlayer.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 5, otherPlayer.transform.position, ForceMode.Impulse);
-            accum3 = 0;
-        }
         if (connected)
         {
             server.UpdateServer();
@@ -79,7 +94,28 @@ public class SimulationTest : MonoBehaviour
     }
 
     private void UpdateClient() {
-        
+
+        //join and get quantity of players
+        if (!join)
+        {
+            var packet5 = channel5.GetPacket();
+            if (packet5 != null)
+            {
+                var quan = packet5.buffer.GetInt();
+                Debug.Log("TO ADD: " + quan);
+                for (int i = 0; i < quan; i++)
+                {
+                    var client = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
+                    client.name =  packet5.buffer.GetString();
+                    client.GetComponent<CubeId>().Id = client.name;
+                    clients.Add(client.name, client);  
+                }
+
+                join = true;
+            } 
+            return;
+        }
+
         //delete from list
         Packet packet3; 
         while ( (packet3=channel3.GetPacket()) != null)
@@ -191,5 +227,10 @@ public class SimulationTest : MonoBehaviour
         if(clientTime > nextTime) {
             interpolationBuffer.RemoveAt(0);
         }
+    }
+
+    public GameObject createServerCube(Vector3 pos)
+    {
+        return Instantiate(ServerPrefab, pos, Quaternion.identity);
     }
 }

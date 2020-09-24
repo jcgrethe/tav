@@ -51,13 +51,13 @@ public class CubeEntity
         //Debug.Log(rotation);
     }
 
-    public static List<CubeEntity> createInterpolated(List<CubeEntity> previousEntities, List<CubeEntity> nextEntities, float t, List<GameObject> players)
+    public static Dictionary<String, CubeEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities, float t, Dictionary<String, GameObject> players)
     {
-        var newEntities = new List<CubeEntity>();
-        for (int i = 0; i < previousEntities.Count ; i++)
+        var newEntities = new Dictionary<string, CubeEntity>();
+        foreach (var currentPlayer in previousEntities.cubeEntities)
         {
-            var previous = previousEntities[i];
-            var next = nextEntities[i];
+            var previous = currentPlayer.Value;
+            var next = nextEntities.cubeEntities[previous.id];
             var cubeEntity = new CubeEntity(previous.cubeGameObject, next.id);
             cubeEntity.position = cubeEntity.position + Vector3.Lerp(previous.position, next.position, t);
             var deltaRot=  Quaternion.Lerp(previous.rotation, next.rotation, t);
@@ -67,15 +67,14 @@ public class CubeEntity
             rot.y = previous.rotation.y + deltaRot.y;
             rot.z = previous.rotation.z + deltaRot.z;
             cubeEntity.rotation = rot;
-            foreach (var player in players)
+            Debug.Log("ARRANCA");
+            foreach (var aux in players)
             {
-                if (player.GetComponent<ClientId>().Id.Equals(cubeEntity.id))
-                {
-                    cubeEntity.cubeGameObject = player;
-                    break;
-                }
+                Debug.Log("KEY " + aux.Key);
+                Debug.Log("VALUE " + aux.Value);
             }
-            newEntities.Add(cubeEntity);
+            cubeEntity.cubeGameObject = players[currentPlayer.Key];
+            newEntities.Add(cubeEntity.id, cubeEntity);
         }
 
         return newEntities;
@@ -83,8 +82,11 @@ public class CubeEntity
 
     public void Apply()
     {
-        cubeGameObject.transform.position = position;
-        cubeGameObject.transform.rotation = rotation;
+        if (cubeGameObject != null)
+        {
+            cubeGameObject.transform.position = position;
+            cubeGameObject.transform.rotation = rotation;
+        }
     }
     
 }
