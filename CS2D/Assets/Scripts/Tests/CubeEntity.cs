@@ -67,12 +67,6 @@ public class CubeEntity
             rot.y = previous.rotation.y + deltaRot.y;
             rot.z = previous.rotation.z + deltaRot.z;
             cubeEntity.rotation = rot;
-            Debug.Log("ARRANCA");
-            foreach (var aux in players)
-            {
-                Debug.Log("KEY " + aux.Key);
-                Debug.Log("VALUE " + aux.Value);
-            }
             cubeEntity.cubeGameObject = players[currentPlayer.Key];
             newEntities.Add(cubeEntity.id, cubeEntity);
         }

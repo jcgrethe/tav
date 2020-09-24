@@ -63,7 +63,7 @@ public class SimulationTest : MonoBehaviour
 
     public void JoinPlayer()
     {
-        var client = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
+        client = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
         client.name = "1";
         client.GetComponent<CubeId>().Id = "1";
         clients.Add("1", client);
@@ -102,7 +102,6 @@ public class SimulationTest : MonoBehaviour
             if (packet5 != null)
             {
                 var quan = packet5.buffer.GetInt();
-                Debug.Log("TO ADD: " + quan);
                 for (int i = 0; i < quan; i++)
                 {
                     var client = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
@@ -152,6 +151,7 @@ public class SimulationTest : MonoBehaviour
         {
             ReadInput();
             var packet2 = Packet.Obtain();
+            packet2.buffer.PutString(client.name);
             packet2.buffer.PutInt(commandServer.Count);
             foreach (var currentCommand in commandServer)
             {

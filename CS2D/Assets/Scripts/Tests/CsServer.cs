@@ -17,13 +17,11 @@ public class CsServer
     private int packetNumber;
     private float accum3;
     private SimulationTest simulationTest;
-    private int quantityOnfIntitialPlayer = 2;
+    private int quantityOnfIntitialPlayer = 5;
     
     //TODO DELETE
     private List<GameObject> bots;
-    private GameObject realPlayer;
-    
-    
+
     public CsServer(Channel channel, Channel channel2, Channel channel3, Channel channel4, Channel channel5, int pps,  SimulationTest simulationTest)
     {
         //this.channel = channel;
@@ -38,7 +36,7 @@ public class CsServer
         
         for (int i = 2; i < 2 + quantityOnfIntitialPlayer; i++)
         {
-            var client = simulationTest.createServerCube(new Vector3(3 ,0.5f, (i - 2) * 3));
+            var client = simulationTest.createServerCube(new Vector3(3 ,0.5f, i * 1.5f - 6));
             var otherPlayer = client;
             otherPlayer.GetComponent<CubeId>().Id = i.ToString();
             otherPlayer.name = i.ToString();
@@ -66,12 +64,10 @@ public class CsServer
         var packet4 = channel4.GetPacket();
         if (packet4 != null)
         {
-            Debug.Log("JOIN");
             var client = simulationTest.createServerCube(new Vector3(0, 0.5f,0));
             client.GetComponent<CubeId>().Id = packet4.buffer.GetString();
             client.name = client.GetComponent<CubeId>().Id;
             cubeServer.Add(client.name, client);
-            realPlayer = client;
             
             var packet = Packet.Obtain();
             packet.buffer.PutInt(quantityOnfIntitialPlayer);
@@ -121,7 +117,9 @@ public class CsServer
         while ( (packet2 = channel2.GetPacket()) != null)
         {
             int max = 0;
+            String id = packet2.buffer.GetString();
             int quantity = packet2.buffer.GetInt();
+            var realPlayer = cubeServer[id];
             for (int i = 0; i < quantity; i++){
                 var commands = new Commands();
                 commands.Deserialize(packet2.buffer);
