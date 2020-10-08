@@ -80,7 +80,19 @@ public class CsServer : MonoBehaviour
             client.name = client.GetComponent<CubeId>().Id;
             cubeServer.Add(client.name, client);
             lastCommand[client.name] = 0;
+            
+            //send new player to all clients
+            foreach (var kv in playerIps)
+            {
+                var auxPacket = Packet.Obtain();
+                auxPacket.buffer.PutInt(1);
+                auxPacket.buffer.PutString(client.name);
+                auxPacket.buffer.Flush();
+                Send(kv.Value, 9004, channel4, auxPacket);
+            }
+            
             playerIps[client.name] = packet4.fromEndPoint.Address.ToString();
+
             
             //send ack
             var packet = Packet.Obtain();
@@ -93,9 +105,6 @@ public class CsServer : MonoBehaviour
             string serverIP = playerIps[client.name];
             int port = 9004;
             Send(serverIP, port, channel4, packet);
-            var remoteEp = new IPEndPoint(IPAddress.Parse(serverIP), port);
-            channel4.Send(packet, remoteEp);
-            packet.Free();
         }
     }
 

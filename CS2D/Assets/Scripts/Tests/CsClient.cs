@@ -89,11 +89,9 @@ public class CsClient : MonoBehaviour
     private void UpdateClient() {
 
         //join and get quantity of players
-        if (!join)
-        {
-            AwaitJoinGame();
-            return;
-        }
+
+        AwaitJoinGame();
+        if (!join) { return; }
 
         UpdateInterpolationBuffer();
 
