@@ -10,13 +10,8 @@ public class CsClient : MonoBehaviour
 {
 
     private Channel channel;
-    private Channel channel2;
     private Channel channel3;
-    private Channel channel4;
     private Channel channel5;
-
-    private CsServer server;
-
 
     private float accum2 = 0f;
     private float accum3 = 0f;
@@ -42,25 +37,21 @@ public class CsClient : MonoBehaviour
     private bool join = false;
     private bool waitJoin = true;
 
+    private String serverIP = "192.168.0.11"; 
     
     // Start is called before the first frame update
     void Start() {
         channel = new Channel(9000); //visual
-        channel2 = new Channel(9001); // input
         channel3 = new Channel(9002); // ack input
-        channel4 = new Channel(9003); // join
         channel5 = new Channel(9004); //ack join
 
-        server = new CsServer(channel, channel2, channel3, channel4, channel5, pps, this);
         clients = new Dictionary<string, GameObject>();
         JoinPlayer();
     }
 
     private void OnDestroy() {
         channel.Disconnect();
-        channel2.Disconnect();
         channel3.Disconnect();
-        channel4.Disconnect();
     }
 
     // Update is called once per frame
@@ -78,7 +69,6 @@ public class CsClient : MonoBehaviour
         cube.Serialize(packet4.buffer);
         packet4.buffer.Flush();
 
-        string serverIP = "127.0.0.1";
         int port = 9003;
         Send(serverIP, port, channel, packet4);
         
@@ -93,10 +83,6 @@ public class CsClient : MonoBehaviour
         
         
         accum2 += Time.deltaTime;
-        if (connected)
-        {
-            server.UpdateServer();
-        }
         UpdateClient();
 
     }
@@ -128,7 +114,6 @@ public class CsClient : MonoBehaviour
 
             packet2.buffer.Flush();
 
-            string serverIP = "127.0.0.1";
             int port = 9001;
             Send(serverIP, port, channel, packet2);
             accum2 -= sendRate;
@@ -256,22 +241,6 @@ public class CsClient : MonoBehaviour
             Input.GetKeyDown(KeyCode.Space), timeout);
         commandServer.Add(command);
         executeCommand(command, client);
-
-        
-        if (Input.GetKeyDown(KeyCode.D))
-        {
-            connected = false;
-            channel2.Disconnect();
-            channel3.Disconnect();
-        }
-        if (Input.GetKeyDown(KeyCode.C))
-        {
-            connected = true;
-            channel2 = new Channel(9001);
-            channel3 = new Channel(9002);
-            server.updateChannels(channel2, channel3);
-        }
-
         packetNumber++;
     }
 
@@ -288,8 +257,5 @@ public class CsClient : MonoBehaviour
 
     }
     
-    public GameObject createServerCube(Vector3 pos)
-    {
-        return Instantiate(ServerPrefab, pos, Quaternion.identity);
-    }
+
 }

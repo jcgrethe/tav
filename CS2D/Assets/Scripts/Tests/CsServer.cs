@@ -5,12 +5,11 @@ using System.Net;
 using UnityEngine;
 using static SendUtil;
 
-public class CsServer
+public class CsServer : MonoBehaviour
 {
     
     private Channel channel2;
     private Channel channel4;
-    private Channel channel5;
 
     public int pps;
     private float accum;
@@ -18,21 +17,17 @@ public class CsServer
     private Dictionary<String, int> lastCommand;
     private Dictionary<String, String> playerIps;
     private float accum3;
-    private CsClient csClient;
-    
+    public GameObject ServerPrefab;
+
+    private int pos = -2;
     //TODO DELETE
     private List<GameObject> bots;
     private int quantityOnfIntitialPlayer = 5;
 
-    public CsServer(Channel channel, Channel channel2, Channel channel3, Channel channel4, Channel channel5, int pps,  CsClient csClient)
+    public void Awake()
     {
-        //this.channel = channel;
-        this.channel2 = channel2;
-        //this.channel3 = channel3;
-        this.channel4 = channel4;
-        this.channel5 = channel5;
-        this.pps = pps; 
-        this.csClient = csClient;
+        channel2 = new Channel(9001);
+        channel4 = new Channel(9003);
         cubeServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         bots = new List<GameObject>();
@@ -40,7 +35,7 @@ public class CsServer
         
         for (int i = 2; i < 2 + quantityOnfIntitialPlayer; i++)
         {
-            var client = csClient.createServerCube(new Vector3(3 ,0.5f, i * 1.5f - 6));
+            var client = createServerCube(new Vector3(3 ,0.5f, i * 1.5f - 6));
             var otherPlayer = client;
             otherPlayer.GetComponent<CubeId>().Id = i.ToString();
             otherPlayer.name = i.ToString();
@@ -50,7 +45,7 @@ public class CsServer
         
     }
 
-    public void UpdateServer()
+    public void Update()
     {
         //salto de bots
         accum3 += Time.deltaTime;
@@ -79,7 +74,7 @@ public class CsServer
         var packet4 = channel4.GetPacket();
         if (packet4 != null)
         {
-            var client = csClient.createServerCube(new Vector3(0, 0.5f,0));
+            var client = createServerCube(new Vector3(0, 0.5f, pos + 2 ));
             
             client.GetComponent<CubeId>().Id = packet4.buffer.GetString();
             client.name = client.GetComponent<CubeId>().Id;
@@ -97,9 +92,9 @@ public class CsServer
             packet.buffer.Flush();
             string serverIP = playerIps[client.name];
             int port = 9004;
-            Send(serverIP, port, channel5, packet);
+            Send(serverIP, port, channel4, packet);
             var remoteEp = new IPEndPoint(IPAddress.Parse(serverIP), port);
-            channel5.Send(packet, remoteEp);
+            channel4.Send(packet, remoteEp);
             packet.Free();
         }
     }
@@ -189,6 +184,9 @@ public class CsServer
         //this.channel3 = channel3;
     }
 
-
+    public GameObject createServerCube(Vector3 pos)
+    {
+        return Instantiate(ServerPrefab, pos, Quaternion.identity);
+    }
     
 }
