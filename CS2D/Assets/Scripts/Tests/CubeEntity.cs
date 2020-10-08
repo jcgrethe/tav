@@ -51,24 +51,28 @@ public class CubeEntity
         //Debug.Log(rotation);
     }
 
-    public static Dictionary<String, CubeEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities, float t, Dictionary<String, GameObject> players)
+    public static Dictionary<String, CubeEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities,
+        float t, Dictionary<String, GameObject> players, String id)
     {
         var newEntities = new Dictionary<string, CubeEntity>();
         foreach (var currentPlayer in previousEntities.cubeEntities)
         {
-            var previous = currentPlayer.Value;
-            var next = nextEntities.cubeEntities[previous.id];
-            var cubeEntity = new CubeEntity(previous.cubeGameObject, next.id);
-            cubeEntity.position = cubeEntity.position + Vector3.Lerp(previous.position, next.position, t);
-            var deltaRot=  Quaternion.Lerp(previous.rotation, next.rotation, t);
-            var rot = new Quaternion();
-            rot.x = previous.rotation.x + deltaRot.x;
-            rot.w = previous.rotation.w + deltaRot.w;
-            rot.y = previous.rotation.y + deltaRot.y;
-            rot.z = previous.rotation.z + deltaRot.z;
-            cubeEntity.rotation = rot;
-            cubeEntity.cubeGameObject = players[currentPlayer.Key];
-            newEntities.Add(cubeEntity.id, cubeEntity);
+            if (!currentPlayer.Key.Equals(id))
+            {
+                var previous = currentPlayer.Value;
+                var next = nextEntities.cubeEntities[previous.id];
+                var cubeEntity = new CubeEntity(previous.cubeGameObject, next.id);
+                cubeEntity.position = cubeEntity.position + Vector3.Lerp(previous.position, next.position, t);
+                var deltaRot = Quaternion.Lerp(previous.rotation, next.rotation, t);
+                var rot = new Quaternion();
+                rot.x = previous.rotation.x + deltaRot.x;
+                rot.w = previous.rotation.w + deltaRot.w;
+                rot.y = previous.rotation.y + deltaRot.y;
+                rot.z = previous.rotation.z + deltaRot.z;
+                cubeEntity.rotation = rot;
+                cubeEntity.cubeGameObject = players[currentPlayer.Key];
+                newEntities.Add(cubeEntity.id, cubeEntity);
+            }
         }
 
         return newEntities;

@@ -211,6 +211,36 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &588294181
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 588294182}
+  m_Layer: 0
+  m_Name: Server
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &588294182
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 588294181}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &803758056
 GameObject:
   m_ObjectHideFlags: 0
@@ -222,7 +252,7 @@ GameObject:
   - component: {fileID: 803758058}
   - component: {fileID: 803758057}
   m_Layer: 0
-  m_Name: SimulationTest
+  m_Name: Client
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -241,11 +271,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   pps: 60
-  requiredSnapshots: 2
-  ClientPrefab: {fileID: 2564320650986601837, guid: 892e5fec2819c4dc291c86130a1d052a,
+  requiredSnapshots: 4
+  ClientPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
     type: 3}
   ServerPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
     type: 3}
+  material: {fileID: 2100000, guid: c20ce5db3ccab4fec83e44f4863da0f7, type: 2}
+  conciliateMaterial: {fileID: 2100000, guid: 8362f0ec02a364dc4828589c67b575b1, type: 2}
+  conciliateGameObject: {fileID: 0}
 --- !u!4 &803758058
 Transform:
   m_ObjectHideFlags: 0

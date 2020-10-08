@@ -13,7 +13,12 @@ public class Snapshot
         this.packetNumber = packetNumber;
         cubeEntities = new Dictionary<string, CubeEntity>();
     }
-    
+
+    public Snapshot()
+    {
+        cubeEntities = new Dictionary<string, CubeEntity>();
+    }
+
     public Snapshot(int packetNumber, Dictionary<String, CubeEntity> cubeEntities)
     {
         this.packetNumber = packetNumber;
@@ -48,9 +53,9 @@ public class Snapshot
         
     }
     
-    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, Dictionary<String, GameObject> players)
+    public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, Dictionary<String, GameObject> players, String id)
     {
-        var cubes = CubeEntity.createInterpolated(previous, next, t, players);
+        var cubes = CubeEntity.createInterpolated(previous, next, t, players, id);
         return new Snapshot(-1, cubes);
     }
 
