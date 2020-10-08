@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Net;
 using UnityEngine;
-using Random = System.Random;
 using static SendUtil;
+using Random = UnityEngine.Random;
 
 public class CsClient : MonoBehaviour
 {
@@ -59,13 +57,14 @@ public class CsClient : MonoBehaviour
     public void JoinPlayer()
     {
         client = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
-        client.name = "1";
-        client.GetComponent<CubeId>().Id = "1";
-        clients.Add("1", client);
+        var id = RandomId();
+        client.name = id;
+        client.GetComponent<CubeId>().Id = id;
+        clients.Add(id, client);
         client.GetComponent<MeshRenderer>().material = material;
         var packet4 = Packet.Obtain();
-        packet4.buffer.PutString("1");
-        var cube = new CubeEntity(client, "1");
+        packet4.buffer.PutString(id);
+        var cube = new CubeEntity(client, id);
         cube.Serialize(packet4.buffer);
         packet4.buffer.Flush();
 
@@ -73,8 +72,8 @@ public class CsClient : MonoBehaviour
         Send(serverIP, port, channel, packet4);
         
         conciliateGameObject = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
-        conciliateGameObject.name = "1";
-        conciliateGameObject.GetComponent<CubeId>().Id = "1";
+        conciliateGameObject.name = id;
+        conciliateGameObject.GetComponent<CubeId>().Id = id;
         conciliateGameObject.GetComponent<MeshRenderer>().material = conciliateMaterial;
     }
 
@@ -255,6 +254,17 @@ public class CsClient : MonoBehaviour
             player.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
         }
 
+    }
+
+    private String RandomId()
+    {
+        var id = "";
+        for(int i=0; i<10; i++)
+        {
+            id += Random.Range(0, 9).ToString();
+        }
+
+        return id;
     }
     
 
