@@ -138,6 +138,7 @@ public class CsClient : MonoBehaviour
                 clients.Add(enemyClient.name, enemyClient);  
             }
 
+            Debug.Log("JOINED");
             join = true;
         } 
     }
@@ -256,6 +257,7 @@ public class CsClient : MonoBehaviour
 
     private String RandomId()
     {
+        Random.seed = System.DateTime.Now.Millisecond;
         var id = "";
         for(int i=0; i<10; i++)
         {

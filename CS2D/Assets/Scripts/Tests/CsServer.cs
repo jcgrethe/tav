@@ -20,9 +20,6 @@ public class CsServer : MonoBehaviour
     public GameObject ServerPrefab;
 
     private int pos = -2;
-    //TODO DELETE
-    private List<GameObject> bots;
-    private int quantityOnfIntitialPlayer = 5;
 
     public void Awake()
     {
@@ -30,35 +27,12 @@ public class CsServer : MonoBehaviour
         channel4 = new Channel(9003);
         cubeServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
-        bots = new List<GameObject>();
         playerIps = new Dictionary<string, string>();
-        
-        for (int i = 2; i < 2 + quantityOnfIntitialPlayer; i++)
-        {
-            var client = createServerCube(new Vector3(3 ,0.5f, i * 1.5f - 6));
-            var otherPlayer = client;
-            otherPlayer.GetComponent<CubeId>().Id = i.ToString();
-            otherPlayer.name = i.ToString();
-            cubeServer.Add(i.ToString(), client); 
-            bots.Add(client);
-        }
-        
+
     }
 
     public void Update()
     {
-        //salto de bots
-        accum3 += Time.deltaTime;
-        if (accum3 > 2)
-        {
-            for (int i = 0; i < quantityOnfIntitialPlayer; i++)
-            {
-                bots[i].GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 5, bots[i].transform.position, ForceMode.Impulse);
-            }
-            
-            accum3 = 0;
-        }
-        
         NewPlayer();
         
         accum += Time.deltaTime;
@@ -75,7 +49,7 @@ public class CsServer : MonoBehaviour
         if (packet4 != null)
         {
             var client = createServerCube(new Vector3(0, 0.5f, pos + 2 ));
-            
+            pos += 2;
             client.GetComponent<CubeId>().Id = packet4.buffer.GetString();
             client.name = client.GetComponent<CubeId>().Id;
             cubeServer.Add(client.name, client);
@@ -94,12 +68,16 @@ public class CsServer : MonoBehaviour
             playerIps[client.name] = packet4.fromEndPoint.Address.ToString();
 
             
-            //send ack
+            //send ack and current players
             var packet = Packet.Obtain();
-            packet.buffer.PutInt(quantityOnfIntitialPlayer);
-            for (int i = 0; i < bots.Count; i++)
+            packet.buffer.PutInt(cubeServer.Count - 1);
+            foreach (var kv in cubeServer)
             {
-                packet.buffer.PutString(bots[i].name);
+                if (!kv.Key.Equals(client.name))
+                {
+                    packet.buffer.PutString(kv.Key);
+                }
+                
             }
             packet.buffer.Flush();
             string serverIP = playerIps[client.name];
