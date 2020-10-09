@@ -149,6 +149,7 @@ public class CsServer : MonoBehaviour
         for (int i = 0; i < quantity; i++){
             var commands = new Commands();
             commands.Deserialize(packet.buffer);
+            Debug.Log(commands.commandNumber);
             if (commands.commandNumber > currentLastCommand)
             {
                 if (commands.space)
