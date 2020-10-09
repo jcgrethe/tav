@@ -242,7 +242,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 982debb929dfa4e818c5cba0c83c6031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pps: 60
+  pps: 50
   requiredSnapshots: 4
   ClientPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
     type: 3}
