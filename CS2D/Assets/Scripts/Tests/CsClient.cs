@@ -200,7 +200,7 @@ public class CsClient : MonoBehaviour
         
         int size = interpolationBuffer.Count;
         Debug.Log(size);
-        if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
+        if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
         }
     }
