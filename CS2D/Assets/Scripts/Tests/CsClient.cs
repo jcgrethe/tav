@@ -8,8 +8,6 @@ public class CsClient : MonoBehaviour
 {
 
     private Channel channel;
-    private Channel channel3;
-    private Channel channel5;
 
     private float accum2 = 0f;
     private float accum3 = 0f;
@@ -20,7 +18,7 @@ public class CsClient : MonoBehaviour
     private bool clientPlaying = false;
     private bool connected = true;
     private int countSpace = 0;
-    
+    private int serverPort = 9000;
     public GameObject ClientPrefab;
     public GameObject ServerPrefab;
     private GameObject client;
@@ -39,9 +37,7 @@ public class CsClient : MonoBehaviour
     
     // Start is called before the first frame update
     void Start() {
-        channel = new Channel(9000); //visual
-        channel3 = new Channel(9002); // ack input
-        channel5 = new Channel(9004); //ack join
+        channel = new Channel(9001);
 
         clients = new Dictionary<string, GameObject>();
         JoinPlayer();
@@ -49,7 +45,6 @@ public class CsClient : MonoBehaviour
 
     private void OnDestroy() {
         channel.Disconnect();
-        channel3.Disconnect();
     }
 
     // Update is called once per frame
@@ -62,14 +57,15 @@ public class CsClient : MonoBehaviour
         client.GetComponent<CubeId>().Id = id;
         clients.Add(id, client);
         client.GetComponent<MeshRenderer>().material = material;
+        
         var packet4 = Packet.Obtain();
+        packet4.buffer.PutEnum(MessageCsType.messagetype.newPlayer, 5);
         packet4.buffer.PutString(id);
         var cube = new CubeEntity(client, id);
         cube.Serialize(packet4.buffer);
         packet4.buffer.Flush();
 
-        int port = 9003;
-        Send(serverIP, port, channel, packet4);
+        Send(serverIP, serverPort, channel, packet4);
         
         conciliateGameObject = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
         conciliateGameObject.name = id;
@@ -82,87 +78,8 @@ public class CsClient : MonoBehaviour
         
         
         accum2 += Time.deltaTime;
-        UpdateClient();
-
-    }
-
-    private void UpdateClient() {
-
-        //join and get quantity of players
-
-        AwaitJoinGame();
-        if (!join) { return; }
-
-        UpdateInterpolationBuffer();
-
-        //send input
-        float sendRate = (1f / 100);
-        if (accum2 >= sendRate)
-        {
-            ReadInput();
-            
-            var packet2 = Packet.Obtain();
-            packet2.buffer.PutString(client.name);
-            packet2.buffer.PutInt(commandServer.Count);
-            foreach (var currentCommand in commandServer)
-            {
-                currentCommand.Serialize(packet2.buffer);
-            }
-
-            packet2.buffer.Flush();
-
-            int port = 9001;
-            Send(serverIP, port, channel, packet2);
-            accum2 -= sendRate;
-
-        }
-            
-        UpdateWord();
-    }
-    
-    
-
-
-    private void AwaitJoinGame()
-    {
-        var packet5 = channel5.GetPacket();
-        if (packet5 != null)
-        {
-            var quan = packet5.buffer.GetInt();
-            for (int i = 0; i < quan; i++)
-            {
-                var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
-                enemyClient.name =  packet5.buffer.GetString();
-                enemyClient.GetComponent<CubeId>().Id = enemyClient.name;
-                enemyClient.GetComponent<MeshRenderer>().material = material;
-                clients.Add(enemyClient.name, enemyClient);  
-            }
-
-            Debug.Log("JOINED");
-            join = true;
-        } 
-    }
-
-    private void UpdateInterpolationBuffer()
-    {
-        //delete from list
-        Packet packet3; 
-        while ( (packet3=channel3.GetPacket()) != null)
-        {
-            var toDel = packet3.buffer.GetInt();
-            while (commandServer.Count != 0)
-            {
-                if (commandServer[0].commandNumber <= toDel)
-                {
-                    commandServer.RemoveAt(0);
-                }
-                else
-                {
-                    break;
-                }
-            }
-        }
-
+        
+        //remove old commands
         while(commandServer.Count != 0)
         {
             if (commandServer[0].timestamp < Time.time)
@@ -174,25 +91,125 @@ public class CsClient : MonoBehaviour
                 break;
             }
         }
+        UpdateClient();
+
+
 
     }
 
-
-    private void UpdateWord()
+    public void FixedUpdate()
     {
-        //visual
-        var packet = channel.GetPacket();
-        if (packet != null) {
-            var buffer = packet.buffer;
-            var snapshot = new Snapshot(-1);
-            snapshot.Deserialize(buffer);
+        SendInput();
+        InterpolateAndConciliate();
 
-            int size = interpolationBuffer.Count;
-            if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
-                interpolationBuffer.Add(snapshot);
+    }
+
+    private void UpdateClient() {
+
+        Packet packet;
+        while ((packet = channel.GetPacket()) != null)
+        {
+
+            switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
+            {
+                case MessageCsType.messagetype.ackInput:
+                    Debug.Log("ackInput");
+                    UpdateInterpolationBuffer(packet);
+                    break;
+                case MessageCsType.messagetype.ackJoin:
+                    Debug.Log("ackJoin");
+                    AwaitJoinGame(packet);
+                    break;
+                case MessageCsType.messagetype.updateWorld:
+                    Debug.Log(interpolationBuffer.Count);
+                    Debug.Log("updateWorld");
+                    UpdateWord(packet);
+                    break;
+                default:
+                    break;
             }
         }
 
+    }
+
+    private void SendInput()
+    {       
+        //send input
+        float sendRate = (1f / 100);
+        if (accum2 >= sendRate)
+        {
+            ReadInput();
+            if (commandServer.Count != 0)
+            {
+                var packet2 = Packet.Obtain();
+                packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
+                packet2.buffer.PutString(client.name);
+                packet2.buffer.PutInt(commandServer.Count);
+                foreach (var currentCommand in commandServer)
+                {
+                    currentCommand.Serialize(packet2.buffer);
+                }
+
+                packet2.buffer.Flush();
+
+                Send(serverIP, serverPort, channel, packet2);
+            }
+            accum2 -= sendRate;
+        }
+    }
+    
+    
+
+
+    private void AwaitJoinGame(Packet packet)
+    {
+        var quan = packet.buffer.GetInt();
+        for (int i = 0; i < quan; i++)
+        {
+            var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
+            enemyClient.name =  packet.buffer.GetString();
+            enemyClient.GetComponent<CubeId>().Id = enemyClient.name;
+            enemyClient.GetComponent<MeshRenderer>().material = material;
+            clients.Add(enemyClient.name, enemyClient);  
+        }
+
+        Debug.Log("JOINED");
+        join = true;
+        
+    }
+
+    private void UpdateInterpolationBuffer(Packet packet)
+    {
+        var toDel = packet.buffer.GetInt();
+        while (commandServer.Count != 0)
+        {
+            if (commandServer[0].commandNumber <= toDel)
+            {
+                commandServer.RemoveAt(0);
+            }
+            else
+            {
+                break;
+            }
+        }
+    }
+
+
+    private void UpdateWord(Packet packet)
+    {
+
+        var buffer = packet.buffer;
+        var snapshot = new Snapshot(-1);
+        snapshot.Deserialize(buffer);
+
+        int size = interpolationBuffer.Count;
+        if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
+            interpolationBuffer.Add(snapshot);
+        }
+    }
+
+    private void InterpolateAndConciliate()
+    {
         if (interpolationBuffer.Count >= requiredSnapshots) {
             clientPlaying = true;
         }
@@ -237,9 +254,14 @@ public class CsClient : MonoBehaviour
         var timeout = Time.time + 2;
         var command = new Commands(packetNumber, Input.GetKeyDown(KeyCode.UpArrow), Input.GetKeyDown(KeyCode.DownArrow),
             Input.GetKeyDown(KeyCode.Space), timeout);
-        commandServer.Add(command);
-        executeCommand(command, client);
-        packetNumber++;
+        if (command.isSendable())
+        { 
+            Debug.Log("SEND");
+            commandServer.Add(command);
+            executeCommand(command, client);
+            packetNumber++;
+        }
+
     }
 
     private void executeCommand(Commands command, GameObject player)

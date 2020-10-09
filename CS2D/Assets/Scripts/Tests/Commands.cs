@@ -46,4 +46,14 @@ public class Commands
         down = buffer.GetBit();
         space = buffer.GetBit();
     }
+
+    public bool isSendable()
+    {
+        if (!up && !down && !space)
+        {
+            return false;
+        }
+
+        return true;
+    }
 }

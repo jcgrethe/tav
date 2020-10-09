@@ -8,8 +8,7 @@ using static SendUtil;
 public class CsServer : MonoBehaviour
 {
     
-    private Channel channel2;
-    private Channel channel4;
+    private Channel channel;
 
     public int pps;
     private float accum;
@@ -21,10 +20,11 @@ public class CsServer : MonoBehaviour
 
     private int pos = -2;
 
+    private int clientPort = 9001;
+    
     public void Awake()
     {
-        channel2 = new Channel(9001);
-        channel4 = new Channel(9003);
+        channel = new Channel(9000);
         cubeServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
@@ -33,143 +33,147 @@ public class CsServer : MonoBehaviour
 
     public void Update()
     {
-        NewPlayer();
-        
         accum += Time.deltaTime;
-        
-        UpdateClientWord();
-        ReceiveInput();
+        Packet packet; 
+        while ((packet = channel.GetPacket()) != null)
+        {
 
+            switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
+            {
+                case MessageCsType.messagetype.newPlayer:
+                    Debug.Log("newPlayer");
+                    NewPlayer(packet);
+                    break;
+                case MessageCsType.messagetype.input:
+                    Debug.Log("input");
+                    ReceiveInput(packet);
+                    break;
+                default:
+                    break;
+            }
+        }
+        
+        
+        
     }
 
-    private void NewPlayer()
+    public void FixedUpdate()
+    {
+        UpdateClientWord();
+        
+    }
+
+
+    private void NewPlayer(Packet packet)
     {
         //join player y send player alreeady in server
-        var packet4 = channel4.GetPacket();
-        if (packet4 != null)
+        var client = createServerCube(new Vector3(0, 0.5f, pos + 2 ));
+        pos += 2;
+        client.GetComponent<CubeId>().Id = packet.buffer.GetString();
+        client.name = client.GetComponent<CubeId>().Id;
+        cubeServer.Add(client.name, client);
+        lastCommand[client.name] = 0;
+        
+        //send new player to all clients
+        foreach (var kv in playerIps)
         {
-            var client = createServerCube(new Vector3(0, 0.5f, pos + 2 ));
-            pos += 2;
-            client.GetComponent<CubeId>().Id = packet4.buffer.GetString();
-            client.name = client.GetComponent<CubeId>().Id;
-            cubeServer.Add(client.name, client);
-            lastCommand[client.name] = 0;
-            
-            //send new player to all clients
-            foreach (var kv in playerIps)
-            {
-                var auxPacket = Packet.Obtain();
-                auxPacket.buffer.PutInt(1);
-                auxPacket.buffer.PutString(client.name);
-                auxPacket.buffer.Flush();
-                Send(kv.Value, 9004, channel4, auxPacket);
-            }
-            
-            playerIps[client.name] = packet4.fromEndPoint.Address.ToString();
-
-            
-            //send ack and current players
-            var packet = Packet.Obtain();
-            packet.buffer.PutInt(cubeServer.Count - 1);
-            foreach (var kv in cubeServer)
-            {
-                if (!kv.Key.Equals(client.name))
-                {
-                    packet.buffer.PutString(kv.Key);
-                }
-                
-            }
-            packet.buffer.Flush();
-            string serverIP = playerIps[client.name];
-            int port = 9004;
-            Send(serverIP, port, channel4, packet);
+            var auxPacket = Packet.Obtain();
+            auxPacket.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
+            auxPacket.buffer.PutInt(1);
+            auxPacket.buffer.PutString(client.name);
+            auxPacket.buffer.Flush();
+            Send(kv.Value, clientPort, channel, auxPacket);
         }
+        
+        playerIps[client.name] = packet.fromEndPoint.Address.ToString();
+
+        
+        //send ack and current players
+        var packetToSend = Packet.Obtain();
+        packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
+        packetToSend.buffer.PutInt(cubeServer.Count - 1);
+        foreach (var kv in cubeServer)
+        {
+            if (!kv.Key.Equals(client.name))
+            {
+                packetToSend.buffer.PutString(kv.Key);
+            }
+            
+        }
+        packet.buffer.Flush();
+        string serverIP = playerIps[client.name];
+        Send(serverIP, clientPort, channel, packet);
+        
     }
 
     private void UpdateClientWord()
-    {        
-        //send position
-        float sendRate = (1f / pps);
-        if (accum >= sendRate)
+    {
+        var snapshot = new Snapshot();
+        //generate word
+        foreach (var auxCubeEntity in cubeServer)
         {
-            var snapshot = new Snapshot();
-            //generate word
-            foreach (var auxCubeEntity in cubeServer)
-            {
-                var cubeEntity = new CubeEntity(auxCubeEntity.Value, auxCubeEntity.Value.GetComponent<CubeId>().Id);
-                snapshot.Add(cubeEntity);
-            }
-            foreach (var kv in playerIps)
-            {
-                
-                var auxPlayerId = kv.Key;
-                snapshot.packetNumber = lastCommand[auxPlayerId];
-                
-                //serialize
-                var packet = Packet.Obtain();
-                snapshot.Serialize(packet.buffer);
-                packet.buffer.Flush();
-
-                string serverIP = kv.Value;
-                int port = 9000;
-                Send(serverIP, port, channel2, packet);
-                // Restart accum
-            }
-            accum -= sendRate;
+            var cubeEntity = new CubeEntity(auxCubeEntity.Value, auxCubeEntity.Value.GetComponent<CubeId>().Id);
+            snapshot.Add(cubeEntity);
         }
+        foreach (var kv in playerIps)
+        {
+            
+            var auxPlayerId = kv.Key;
+            snapshot.packetNumber = lastCommand[auxPlayerId];
+            
+            //serialize
+            var updatePacket = Packet.Obtain();
+            updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
+            snapshot.Serialize(updatePacket.buffer);
+            updatePacket.buffer.Flush();
 
+            string serverIP = kv.Value;
+            Send(serverIP, clientPort, channel, updatePacket);
+            // Restart accum
+        }
     }
 
-    private void ReceiveInput()
+    private void ReceiveInput(Packet packet)
     {
         //receive input
-        Packet packet2;
-        while ( (packet2 = channel2.GetPacket()) != null)
-        {
-            int max = 0;
-            String id = packet2.buffer.GetString();
-            int quantity = packet2.buffer.GetInt();
-            var realPlayer = cubeServer[id];
-            var currentLastCommand = lastCommand[id];
-            for (int i = 0; i < quantity; i++){
-                var commands = new Commands();
-                commands.Deserialize(packet2.buffer);
-                if (commands.commandNumber > currentLastCommand)
+        int max = 0;
+        String id = packet.buffer.GetString();
+        int quantity = packet.buffer.GetInt();
+        var realPlayer = cubeServer[id];
+        var currentLastCommand = lastCommand[id];
+        for (int i = 0; i < quantity; i++){
+            var commands = new Commands();
+            commands.Deserialize(packet.buffer);
+            if (commands.commandNumber > currentLastCommand)
+            {
+                if (commands.space)
                 {
-                    if (commands.space)
-                    {
-                        realPlayer.GetComponent<Rigidbody>()
-                            .AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
-                    }
-
-                    if (commands.up)
-                    {
-                        realPlayer.GetComponent<Rigidbody>()
-                            .AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
-                    }
-
-                    max = commands.commandNumber;
+                    realPlayer.GetComponent<Rigidbody>()
+                        .AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
                 }
+
+                if (commands.up)
+                {
+                    realPlayer.GetComponent<Rigidbody>()
+                        .AddForceAtPosition(Vector3.up * 10, Vector3.zero, ForceMode.Impulse);
+                }
+
+                max = commands.commandNumber;
             }
-
-            lastCommand[id] = max;
-
-            //send ack
-            var packet3 = Packet.Obtain();
-            packet3.buffer.PutInt(max);
-            packet3.buffer.Flush();
-            string serverIP = playerIps[id];
-            int port = 9002;
-            Send(serverIP,port, channel2, packet3);
         }
-    }
 
+        lastCommand[id] = max;
 
-    public void updateChannels(Channel channel2, Channel channel3)
-    {
-        this.channel2 = channel2;
-        //this.channel3 = channel3;
+        //send ack
+        var packet3 = Packet.Obtain();
+        packet3.buffer.PutEnum(MessageCsType.messagetype.ackInput, 5);
+        packet3.buffer.PutInt(max);
+        packet3.buffer.Flush();
+        string serverIP = playerIps[id];
+        Send(serverIP, clientPort, channel, packet3);
+        
     }
+    
 
     public GameObject createServerCube(Vector3 pos)
     {
