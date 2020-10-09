@@ -113,16 +113,12 @@ public class CsClient : MonoBehaviour
             switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
             {
                 case MessageCsType.messagetype.ackInput:
-                    Debug.Log("ackInput");
                     UpdateInterpolationBuffer(packet);
                     break;
                 case MessageCsType.messagetype.ackJoin:
-                    Debug.Log("ackJoin");
                     AwaitJoinGame(packet);
                     break;
                 case MessageCsType.messagetype.updateWorld:
-                    Debug.Log(interpolationBuffer.Count);
-                    Debug.Log("updateWorld");
                     UpdateWord(packet);
                     break;
                 default:
@@ -256,7 +252,6 @@ public class CsClient : MonoBehaviour
             Input.GetKeyDown(KeyCode.Space), timeout);
         if (command.isSendable())
         { 
-            Debug.Log("SEND");
             commandServer.Add(command);
             executeCommand(command, client);
             packetNumber++;

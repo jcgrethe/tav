@@ -21,7 +21,8 @@ public class CsServer : MonoBehaviour
     private int pos = -2;
 
     private int clientPort = 9001;
-    
+    private int packetNumber = 0;
+
     public void Awake()
     {
         channel = new Channel(9000);
@@ -41,11 +42,9 @@ public class CsServer : MonoBehaviour
             switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
             {
                 case MessageCsType.messagetype.newPlayer:
-                    Debug.Log("newPlayer");
                     NewPlayer(packet);
                     break;
                 case MessageCsType.messagetype.input:
-                    Debug.Log("input");
                     ReceiveInput(packet);
                     break;
                 default:
@@ -108,7 +107,7 @@ public class CsServer : MonoBehaviour
 
     private void UpdateClientWord()
     {
-        var snapshot = new Snapshot();
+        var snapshot = new Snapshot(packetNumber);
         //generate word
         foreach (var auxCubeEntity in cubeServer)
         {
@@ -117,9 +116,6 @@ public class CsServer : MonoBehaviour
         }
         foreach (var kv in playerIps)
         {
-            
-            var auxPlayerId = kv.Key;
-            snapshot.packetNumber = lastCommand[auxPlayerId];
             
             //serialize
             var updatePacket = Packet.Obtain();
@@ -131,6 +127,8 @@ public class CsServer : MonoBehaviour
             Send(serverIP, clientPort, channel, updatePacket);
             // Restart accum
         }
+
+        packetNumber++;
     }
 
     private void ReceiveInput(Packet packet)
