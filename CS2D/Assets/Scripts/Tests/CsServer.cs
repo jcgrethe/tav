@@ -17,6 +17,7 @@ public class CsServer : MonoBehaviour
     private Dictionary<String, String> playerIps;
     private float accum3;
     public GameObject ServerPrefab;
+    private Dictionary<String, int> lastSnapshot;
 
     private int pos = -2;
 
@@ -29,6 +30,7 @@ public class CsServer : MonoBehaviour
         cubeServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
+        lastSnapshot = new Dictionary<string, int>();
 
     }
 
@@ -73,7 +75,8 @@ public class CsServer : MonoBehaviour
         client.name = client.GetComponent<CubeId>().Id;
         cubeServer.Add(client.name, client);
         lastCommand[client.name] = 0;
-        
+        lastSnapshot[client.name] = 0;
+
         //send new player to all clients
         foreach (var kv in playerIps)
         {
@@ -108,7 +111,7 @@ public class CsServer : MonoBehaviour
 
     private void UpdateClientWord()
     {
-        var snapshot = new Snapshot(packetNumber);
+        var snapshot = new Snapshot();
         //generate word
         foreach (var auxCubeEntity in cubeServer)
         {
@@ -117,6 +120,9 @@ public class CsServer : MonoBehaviour
         }
         foreach (var kv in playerIps)
         {
+            var auxPlayerId = kv.Key;	
+            snapshot.packetNumber = lastSnapshot[auxPlayerId];
+            lastSnapshot[auxPlayerId]++;
             //serialize
             var updatePacket = Packet.Obtain();
             updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
