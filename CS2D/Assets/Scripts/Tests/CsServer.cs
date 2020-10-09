@@ -20,7 +20,9 @@ public class CsServer : MonoBehaviour
     public GameObject ServerPrefab;
 
     private int pos = -2;
-
+    private int packetNumber = 0;
+    
+    
     public void Awake()
     {
         channel2 = new Channel(9001);
@@ -92,18 +94,16 @@ public class CsServer : MonoBehaviour
         float sendRate = (1f / pps);
         if (accum >= sendRate)
         {
-            var snapshot = new Snapshot();
+            var snapshot = new Snapshot(packetNumber);
             //generate word
             foreach (var auxCubeEntity in cubeServer)
             {
                 var cubeEntity = new CubeEntity(auxCubeEntity.Value, auxCubeEntity.Value.GetComponent<CubeId>().Id);
                 snapshot.Add(cubeEntity);
             }
+            packetNumber++;
             foreach (var kv in playerIps)
             {
-                
-                var auxPlayerId = kv.Key;
-                snapshot.packetNumber = lastCommand[auxPlayerId];
                 
                 //serialize
                 var packet = Packet.Obtain();
@@ -126,6 +126,7 @@ public class CsServer : MonoBehaviour
         Packet packet2;
         while ( (packet2 = channel2.GetPacket()) != null)
         {
+            Debug.Log("INPUT");
             int max = 0;
             String id = packet2.buffer.GetString();
             int quantity = packet2.buffer.GetInt();

@@ -94,27 +94,28 @@ public class CsClient : MonoBehaviour
         if (!join) { return; }
 
         UpdateInterpolationBuffer();
-
+        
         //send input
         float sendRate = (1f / 100);
         if (accum2 >= sendRate)
         {
             ReadInput();
-            
-            var packet2 = Packet.Obtain();
-            packet2.buffer.PutString(client.name);
-            packet2.buffer.PutInt(commandServer.Count);
-            foreach (var currentCommand in commandServer)
+            if (commandServer.Count > 0)
             {
-                currentCommand.Serialize(packet2.buffer);
+                var packet2 = Packet.Obtain();
+                packet2.buffer.PutString(client.name);
+                packet2.buffer.PutInt(commandServer.Count);
+                foreach (var currentCommand in commandServer)
+                {
+                    currentCommand.Serialize(packet2.buffer);
+                }
+
+                packet2.buffer.Flush();
+
+                int port = 9001;
+                Send(serverIP, port, channel, packet2);
             }
-
-            packet2.buffer.Flush();
-
-            int port = 9001;
-            Send(serverIP, port, channel, packet2);
             accum2 -= sendRate;
-
         }
             
         UpdateWord();
@@ -237,9 +238,12 @@ public class CsClient : MonoBehaviour
         var timeout = Time.time + 2;
         var command = new Commands(packetNumber, Input.GetKeyDown(KeyCode.UpArrow), Input.GetKeyDown(KeyCode.DownArrow),
             Input.GetKeyDown(KeyCode.Space), timeout);
-        commandServer.Add(command);
-        executeCommand(command, client);
-        packetNumber++;
+        if (command.isSendable())
+        {
+            commandServer.Add(command);
+            executeCommand(command, client);
+            packetNumber++;
+        }
     }
 
     private void executeCommand(Commands command, GameObject player)
