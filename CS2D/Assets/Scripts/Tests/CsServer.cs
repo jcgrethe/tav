@@ -126,12 +126,11 @@ public class CsServer : MonoBehaviour
         Packet packet2;
         while ( (packet2 = channel2.GetPacket()) != null)
         {
-            Debug.Log("INPUT");
-            int max = 0;
             String id = packet2.buffer.GetString();
             int quantity = packet2.buffer.GetInt();
             var realPlayer = cubeServer[id];
             var currentLastCommand = lastCommand[id];
+            var max = currentLastCommand;
             for (int i = 0; i < quantity; i++){
                 var commands = new Commands();
                 commands.Deserialize(packet2.buffer);
