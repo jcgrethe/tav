@@ -238,12 +238,12 @@ public class CsClient : MonoBehaviour
         var timeout = Time.time + 2;
         var command = new Commands(packetNumber, Input.GetKeyDown(KeyCode.UpArrow), Input.GetKeyDown(KeyCode.DownArrow),
             Input.GetKeyDown(KeyCode.Space), timeout);
-        if (command.isSendable())
-        {
+        //if (command.isSendable())
+        //{
             commandServer.Add(command);
             executeCommand(command, client);
             packetNumber++;
-        }
+        //}
     }
 
     private void executeCommand(Commands command, GameObject player)
