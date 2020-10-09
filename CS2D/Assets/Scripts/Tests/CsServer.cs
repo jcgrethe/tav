@@ -36,7 +36,6 @@ public class CsServer : MonoBehaviour
 
     public void Update()
     {
-        accum += Time.deltaTime;
         Packet packet; 
         while ((packet = channel.GetPacket()) != null)
         {
@@ -60,8 +59,14 @@ public class CsServer : MonoBehaviour
 
     public void FixedUpdate()
     {
-        UpdateClientWord();
-        
+        accum += Time.deltaTime;
+        float sendRate = (1f / pps);
+        if (accum >= sendRate)
+        {
+            UpdateClientWord();
+            accum -= sendRate;
+
+        }
     }
 
 
@@ -131,7 +136,6 @@ public class CsServer : MonoBehaviour
 
             string serverIP = kv.Value;
             Send(serverIP, clientPort, channel, updatePacket);
-            // Restart accum
         }
 
         packetNumber++;
@@ -149,7 +153,6 @@ public class CsServer : MonoBehaviour
         for (int i = 0; i < quantity; i++){
             var commands = new Commands();
             commands.Deserialize(packet.buffer);
-            Debug.Log(commands.commandNumber);
             if (commands.commandNumber > currentLastCommand)
             {
                 if (commands.space)

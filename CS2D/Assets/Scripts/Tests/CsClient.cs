@@ -103,14 +103,13 @@ public class CsClient : MonoBehaviour
 
     public void FixedUpdate()
     {
+        clientTime += Time.deltaTime;
         SendInput();
         InterpolateAndConciliate();
-
     }
 
     private void UpdateClient() {
 
-        clientTime += Time.deltaTime;
         Packet packet;
         while ((packet = channel.GetPacket()) != null)
         {
@@ -197,7 +196,7 @@ public class CsClient : MonoBehaviour
         snapshot.Deserialize(buffer);
         
         int size = interpolationBuffer.Count;
-        //Debug.Log(interpolationBuffer.Count);
+        Debug.Log(size);
         if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
             interpolationBuffer.Add(snapshot);
         }
@@ -225,7 +224,6 @@ public class CsClient : MonoBehaviour
         interpolatedSnapshot.Apply();
 
         if(clientTime > nextTime) {
-            //Debug.Log("REMOVE");
             interpolationBuffer.RemoveAt(0);
         }
     }

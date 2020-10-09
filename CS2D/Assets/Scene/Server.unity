@@ -254,7 +254,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cfa310dabab44abda36cf86668d82685, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pps: 60
+  pps: 50
   ServerPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
     type: 3}
 --- !u!1 &803758056
