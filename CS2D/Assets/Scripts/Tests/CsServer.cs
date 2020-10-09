@@ -21,7 +21,7 @@ public class CsServer : MonoBehaviour
 
     private int pos = -2;
     private int packetNumber = 0;
-    
+    private Dictionary<String, int> lastSnapshot;
     
     public void Awake()
     {
@@ -30,6 +30,7 @@ public class CsServer : MonoBehaviour
         cubeServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
+        lastSnapshot = new Dictionary<string, int>();
 
     }
 
@@ -56,7 +57,7 @@ public class CsServer : MonoBehaviour
             client.name = client.GetComponent<CubeId>().Id;
             cubeServer.Add(client.name, client);
             lastCommand[client.name] = 0;
-            
+            lastSnapshot[client.name] = 0;
             //send new player to all clients
             foreach (var kv in playerIps)
             {
@@ -94,17 +95,18 @@ public class CsServer : MonoBehaviour
         float sendRate = (1f / pps);
         if (accum >= sendRate)
         {
-            var snapshot = new Snapshot(packetNumber);
+            var snapshot = new Snapshot();
             //generate word
             foreach (var auxCubeEntity in cubeServer)
             {
                 var cubeEntity = new CubeEntity(auxCubeEntity.Value, auxCubeEntity.Value.GetComponent<CubeId>().Id);
                 snapshot.Add(cubeEntity);
             }
-            packetNumber++;
             foreach (var kv in playerIps)
             {
-                
+                var auxPlayerId = kv.Key;	
+                snapshot.packetNumber = lastSnapshot[auxPlayerId];
+                lastSnapshot[auxPlayerId]++;
                 //serialize
                 var packet = Packet.Obtain();
                 snapshot.Serialize(packet.buffer);
