@@ -117,7 +117,6 @@ public class CsServer : MonoBehaviour
         }
         foreach (var kv in playerIps)
         {
-            
             //serialize
             var updatePacket = Packet.Obtain();
             updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);

@@ -114,7 +114,6 @@ public class CsClient : MonoBehaviour
         Packet packet;
         while ((packet = channel.GetPacket()) != null)
         {
-
             switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
             {
                 case MessageCsType.messagetype.ackInput:
@@ -134,29 +133,24 @@ public class CsClient : MonoBehaviour
     }
 
     private void SendInput()
-    {       
-        //send input
-        float sendRate = (1f / 100);
-        if (accum2 >= sendRate)
+    {
+        ReadInput();
+        if (commandServer.Count != 0)
         {
-            ReadInput();
-            if (commandServer.Count != 0)
+            var packet2 = Packet.Obtain();
+            packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
+            packet2.buffer.PutString(client.name);
+            packet2.buffer.PutInt(commandServer.Count);
+            foreach (var currentCommand in commandServer)
             {
-                var packet2 = Packet.Obtain();
-                packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
-                packet2.buffer.PutString(client.name);
-                packet2.buffer.PutInt(commandServer.Count);
-                foreach (var currentCommand in commandServer)
-                {
-                    currentCommand.Serialize(packet2.buffer);
-                }
-
-                packet2.buffer.Flush();
-
-                Send(serverIP, serverPort, channel, packet2);
+                currentCommand.Serialize(packet2.buffer);
             }
-            accum2 -= sendRate;
+
+            packet2.buffer.Flush();
+
+            Send(serverIP, serverPort, channel, packet2);
         }
+        
     }
     
     
@@ -206,6 +200,10 @@ public class CsClient : MonoBehaviour
         int size = interpolationBuffer.Count;
         if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
             interpolationBuffer.Add(snapshot);
+        }
+        else
+        {
+            Debug.Log("NOTADD");
         }
     }
 
