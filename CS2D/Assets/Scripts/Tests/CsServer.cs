@@ -34,6 +34,8 @@ public class CsServer : MonoBehaviour
 
     }
 
+
+
     public void Update()
     {
         NewPlayer();

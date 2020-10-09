@@ -12,17 +12,13 @@ public class CsClient : MonoBehaviour
     private Channel channel5;
 
     private float accum2 = 0f;
-    private float accum3 = 0f;
     private float clientTime = 0f;
     public int pps = 100;
     public int requiredSnapshots = 3;
     private int packetNumber = 0;
     private bool clientPlaying = false;
-    private bool connected = true;
-    private int countSpace = 0;
     
     public GameObject ClientPrefab;
-    public GameObject ServerPrefab;
     private GameObject client;
     public Material material;
     public Material conciliateMaterial;
@@ -33,7 +29,6 @@ public class CsClient : MonoBehaviour
     List<Snapshot> interpolationBuffer = new List<Snapshot>();
     List<Commands> commandServer = new List<Commands>();
     private bool join = false;
-    private bool waitJoin = true;
 
     private String serverIP = "192.168.0.11"; 
     
@@ -85,6 +80,11 @@ public class CsClient : MonoBehaviour
         UpdateClient();
 
     }
+    
+    public void FixedUpdate()
+    {
+        ManageInput();
+    }
 
     private void UpdateClient() {
 
@@ -94,7 +94,12 @@ public class CsClient : MonoBehaviour
         if (!join) { return; }
 
         UpdateInterpolationBuffer();
-        
+
+        UpdateWord();
+    }
+
+    private void ManageInput()
+    {
         //send input
         float sendRate = (1f / 100);
         if (accum2 >= sendRate)
@@ -117,8 +122,6 @@ public class CsClient : MonoBehaviour
             }
             accum2 -= sendRate;
         }
-            
-        UpdateWord();
     }
     
     
