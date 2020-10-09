@@ -60,13 +60,8 @@ public class CsServer : MonoBehaviour
     public void FixedUpdate()
     {
         accum += Time.deltaTime;
-        float sendRate = (1f / pps);
-        if (accum >= sendRate)
-        {
-            UpdateClientWord();
-            accum -= sendRate;
+        UpdateClientWord();
 
-        }
     }
 
 

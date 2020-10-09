@@ -74,7 +74,7 @@ public class CsClient : MonoBehaviour
         conciliateGameObject = Instantiate(ClientPrefab, new Vector3(0, 0.5f, 0), Quaternion.identity);
         conciliateGameObject.name = id;
         conciliateGameObject.GetComponent<CubeId>().Id = id;
-        conciliateGameObject.GetComponent<MeshRenderer>().material = conciliateMaterial;
+        Destroy(conciliateGameObject.GetComponent<MeshRenderer>());
     }
 
 
