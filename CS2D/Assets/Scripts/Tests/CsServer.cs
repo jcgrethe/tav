@@ -134,11 +134,12 @@ public class CsServer : MonoBehaviour
     private void ReceiveInput(Packet packet)
     {
         //receive input
-        int max = 0;
+        
         String id = packet.buffer.GetString();
         int quantity = packet.buffer.GetInt();
         var realPlayer = cubeServer[id];
         var currentLastCommand = lastCommand[id];
+        int max = currentLastCommand;
         for (int i = 0; i < quantity; i++){
             var commands = new Commands();
             commands.Deserialize(packet.buffer);

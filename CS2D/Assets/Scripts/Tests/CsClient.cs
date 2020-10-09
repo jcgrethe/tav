@@ -145,7 +145,6 @@ public class CsClient : MonoBehaviour
             {
                 currentCommand.Serialize(packet2.buffer);
             }
-
             packet2.buffer.Flush();
 
             Send(serverIP, serverPort, channel, packet2);
@@ -200,10 +199,6 @@ public class CsClient : MonoBehaviour
         int size = interpolationBuffer.Count;
         if(size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) {
             interpolationBuffer.Add(snapshot);
-        }
-        else
-        {
-            Debug.Log("NOTADD");
         }
     }
 
@@ -264,6 +259,7 @@ public class CsClient : MonoBehaviour
 
     private void executeCommand(Commands command, GameObject player)
     {
+
         if (command.space)
         {
             player.GetComponent<Rigidbody>().AddForceAtPosition(Vector3.up * 2, Vector3.zero, ForceMode.Impulse);
