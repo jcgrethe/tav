@@ -107,12 +107,8 @@ public class CsClient : MonoBehaviour
         clientTime += Time.deltaTime;
         SendInput();
         accum += Time.deltaTime;
-        float sendRate = (1f / pps);
-        if (accum >= sendRate)
-        {
-            InterpolateAndConciliate();
-            accum -= sendRate;
-        }
+        InterpolateAndConciliate();
+        
     }
 
     private void UpdateClient() {
