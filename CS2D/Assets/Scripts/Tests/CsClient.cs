@@ -37,14 +37,18 @@ public class CsClient : MonoBehaviour
     
     // Start is called before the first frame update
     void Start() {
-        channel = new Channel(9001);
-
-        clients = new Dictionary<string, GameObject>();
         JoinPlayer();
     }
 
     private void OnDestroy() {
         channel.Disconnect();
+    }
+
+    public void Awake()
+    {
+        channel = new Channel(9001);
+
+        clients = new Dictionary<string, GameObject>();
     }
 
     // Update is called once per frame
@@ -99,6 +103,7 @@ public class CsClient : MonoBehaviour
 
     public void FixedUpdate()
     {
+        if (!join) { return; }
         SendInput();
         InterpolateAndConciliate();
 

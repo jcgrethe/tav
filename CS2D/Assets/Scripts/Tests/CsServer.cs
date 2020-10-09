@@ -66,6 +66,7 @@ public class CsServer : MonoBehaviour
     private void NewPlayer(Packet packet)
     {
         //join player y send player alreeady in server
+        Debug.Log("NEW PLAYER");
         var client = createServerCube(new Vector3(0, 0.5f, pos + 2 ));
         pos += 2;
         client.GetComponent<CubeId>().Id = packet.buffer.GetString();
@@ -99,9 +100,9 @@ public class CsServer : MonoBehaviour
             }
             
         }
-        packet.buffer.Flush();
+        packetToSend.buffer.Flush();
         string serverIP = playerIps[client.name];
-        Send(serverIP, clientPort, channel, packet);
+        Send(serverIP, clientPort, channel, packetToSend);
         
     }
 
