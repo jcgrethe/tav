@@ -242,15 +242,18 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 982debb929dfa4e818c5cba0c83c6031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pps: 60
+  pps: 50
   requiredSnapshots: 4
-  ClientPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
-    type: 3}
-  ServerPrefab: {fileID: 1291858392845856911, guid: 834b4244ca50449ca8985db0957e3605,
+  ClientPrefab: {fileID: 1045401375514670, guid: f11fc98cf1e8d5547a9b2ec85cc9c664,
     type: 3}
   material: {fileID: 2100000, guid: c20ce5db3ccab4fec83e44f4863da0f7, type: 2}
-  conciliateMaterial: {fileID: 2100000, guid: 8362f0ec02a364dc4828589c67b575b1, type: 2}
-  conciliateGameObject: {fileID: 0}
+  cameraHolder: {fileID: 0}
+  mouseSensitivity: 2
+  upLimit: -50
+  downLimit: 50
+  serverIP: 192.168.1.137
+  cameraPrefab: {fileID: 5321193855791418785, guid: 6f46c694170ba4841881085512aa9807,
+    type: 3}
 --- !u!4 &623013770
 Transform:
   m_ObjectHideFlags: 0
