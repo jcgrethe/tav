@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static SendUtil;
 using static ExecuteCommand;
+
 using Random = UnityEngine.Random;
 
 public class CsClient : MonoBehaviour
@@ -27,7 +28,7 @@ public class CsClient : MonoBehaviour
     private bool join = false;
     private bool waitJoin = true;
     public Transform cameraHolder;
-    public float mouseSensitivity = 2f;
+    private float mouseSensitivity = 6f;
     public float upLimit = -50;
     public float downLimit = 50;
     public String serverIP = "192.168.1.137";
@@ -83,6 +84,8 @@ public class CsClient : MonoBehaviour
         conciliateGameObject.GetComponent<PlayerId>().Id = id;
         conciliateCharacterController = conciliateGameObject.GetComponent<CharacterController>();
         Destroy(conciliateGameObject.GetComponent<Animator>());
+        conciliateCharacterController.transform.GetChild(1).gameObject.active = false;
+
     }
 
 
@@ -230,7 +233,7 @@ public class CsClient : MonoBehaviour
         conciliateGameObject.transform.rotation = auxClient.rotation;
         foreach (var auxCommand in commandServer)
         {
-            Execute(auxCommand, conciliateGameObject.transform, conciliateCharacterController);
+            Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
         }
 
         client.transform.position = conciliateGameObject.transform.position;
@@ -240,7 +243,8 @@ public class CsClient : MonoBehaviour
     private void ReadInput()
     {
         var timeout = Time.time + 2;
-        Command command = new Command(packetNumber, Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"), timeout);
+        Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
+            Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"));
         
         //if (characterController.isGrounded) verticalSpeed = 0;
         //else verticalSpeed -= gravity * Time.deltaTime;
@@ -249,24 +253,11 @@ public class CsClient : MonoBehaviour
         commandServer.Add(command);
         packetNumber++;
         
-        RotateCamera();
-        Execute(command, client.transform, characterController);
+        Execute(command, client, characterController);
         animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
     }
 
-    public void RotateCamera()
-    {
-        float horizontalRotation = Input.GetAxis("Mouse X");
-        float verticalRotation = Input.GetAxis("Mouse Y");
-        
-        transform.Rotate(0, horizontalRotation * mouseSensitivity, 0);
-        cameraHolder.Rotate(-verticalRotation*mouseSensitivity,0,0);
 
-        Vector3 currentRotation = cameraHolder.localEulerAngles;
-        if (currentRotation.x > 180) currentRotation.x -= 360;
-        currentRotation.x = Mathf.Clamp(currentRotation.x, upLimit, downLimit);
-        cameraHolder.localRotation = Quaternion.Euler(currentRotation);
-    }
 
 
     private String RandomId()

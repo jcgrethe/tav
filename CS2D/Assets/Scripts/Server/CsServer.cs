@@ -74,6 +74,7 @@ public class CsServer : MonoBehaviour
         client.GetComponent<PlayerId>().Id = packet.buffer.GetString();
         client.name = client.GetComponent<PlayerId>().Id;
         Destroy(client.GetComponent<Animator>());
+        //client.transform.GetChild(1).gameObject.active = false;
         cubeServer.Add(client.name, client);
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
@@ -151,7 +152,7 @@ public class CsServer : MonoBehaviour
             commands.Deserialize(packet.buffer);
             if (commands.commandNumber > currentLastCommand)
             {
-                ExecuteCommand.Execute(commands, player.transform, player.GetComponent<CharacterController>());
+                ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
                 max = commands.commandNumber;
             }
         }
