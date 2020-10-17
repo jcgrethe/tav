@@ -4,10 +4,21 @@ public class ExecuteCommand
 {
 
     private static float mouseSensitivity = 6;
+    // gravity
+
     public static void Execute(Command command, GameObject client, CharacterController characterController)
     {
-        Vector3 move = client.transform.forward * command.VerticalMove + client.transform.right * command.HorizontalMove;
-        characterController.Move(6 * Time.deltaTime * move); //+ gravityMove * Time.deltaTime);
+        
+        float gravity = 10000f;
+        float verticalSpeed = 0;
+        float horizontalMove = command.HorizontalMove;
+        float verticalMove = command.VerticalMove;
+
+        if (characterController.isGrounded) verticalSpeed = 0;
+        else verticalSpeed -= gravity * Time.deltaTime;
+        Vector3 gravityMove = new Vector3(0, verticalSpeed, 0);
+        Vector3 move = client.transform.forward * verticalMove + client.transform.right * horizontalMove;
+        characterController.Move(300 * Time.deltaTime * move + gravityMove * Time.deltaTime);
         Rotate(client, command);
     }
     

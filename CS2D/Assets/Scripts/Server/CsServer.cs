@@ -19,7 +19,7 @@ public class CsServer : MonoBehaviour
     public GameObject ServerPrefab;
     private Dictionary<String, int> lastSnapshot;
 
-    private int pos = -2;
+    private int pos = 648;
 
     private int clientPort = 9001;
     private int packetNumber = 0;
@@ -69,12 +69,12 @@ public class CsServer : MonoBehaviour
     {
         //join player y send player alreeady in server
         Debug.Log("NEW PLAYER");
-        var client = createServerCube(new Vector3(0, 0f, pos + 2 ));
+        var client = createPlayer(new Vector3(343.2f, 1109.8f, pos + 2 ));
         pos += 2;
         client.GetComponent<PlayerId>().Id = packet.buffer.GetString();
         client.name = client.GetComponent<PlayerId>().Id;
         Destroy(client.GetComponent<Animator>());
-        //client.transform.GetChild(1).gameObject.active = false;
+        client.transform.GetChild(1).gameObject.active = false;
         cubeServer.Add(client.name, client);
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
@@ -170,7 +170,7 @@ public class CsServer : MonoBehaviour
     }
     
 
-    public GameObject createServerCube(Vector3 pos)
+    public GameObject createPlayer(Vector3 pos)
     {
         return Instantiate(ServerPrefab, pos, Quaternion.identity);
     }

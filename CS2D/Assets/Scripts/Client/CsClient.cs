@@ -32,7 +32,7 @@ public class CsClient : MonoBehaviour
     public float upLimit = -50;
     public float downLimit = 50;
     public String serverIP = "192.168.1.137";
-
+    private GameObject mainCamera;
     public GameObject cameraPrefab;
 
     private Animator animator;
@@ -56,7 +56,7 @@ public class CsClient : MonoBehaviour
 
     private void JoinPlayer()
     {
-        client = Instantiate(ClientPrefab, new Vector3(0, 0f, 0), Quaternion.identity);
+        client = Instantiate(ClientPrefab, new Vector3(343.2f, 1209.8f, 650 ), Quaternion.identity);
         var id = RandomId();
         client.name = id;
         client.GetComponent<PlayerId>().Id = id;
@@ -64,12 +64,13 @@ public class CsClient : MonoBehaviour
         //client.GetComponent<MeshRenderer>().material = material;
         characterController = client.GetComponent<CharacterController>();
         animator = client.GetComponent<Animator>();
-        GameObject main = Instantiate(cameraPrefab, new Vector3(0, 0f, 0), Quaternion.identity);
+        
+        GameObject main = Instantiate(cameraPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         main.transform.parent = client.transform;
-        main.transform.position = new Vector3(0, 3.21f , -6.35f);
-        main.transform.eulerAngles = new Vector3(14,0,0);
+        main.transform.localPosition = new Vector3(-0.14f, 2.29f, -6.02f);
         cameraHolder = main.GetComponent<Camera>().transform;
         
+        //mainCamera = main;
         var packet4 = Packet.Obtain();
         packet4.buffer.PutEnum(MessageCsType.messagetype.newPlayer, 5);
         packet4.buffer.PutString(id);
