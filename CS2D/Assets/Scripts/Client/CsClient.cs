@@ -246,16 +246,11 @@ public class CsClient : MonoBehaviour
         var timeout = Time.time + 2;
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"));
-        
-        //if (characterController.isGrounded) verticalSpeed = 0;
-        //else verticalSpeed -= gravity * Time.deltaTime;
-        //Vector3 gravityMove = new Vector3(0, verticalSpeed, 0);
-
         commandServer.Add(command);
         packetNumber++;
-        
-        Execute(command, client, characterController);
         animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
+        Execute(command, client, characterController);
+        LocalCameraRotate();
     }
 
 
@@ -271,6 +266,16 @@ public class CsClient : MonoBehaviour
         }
 
         return id;
+    }
+
+    private void LocalCameraRotate()
+    {
+        float verticalRotation = Input.GetAxis("Mouse Y");
+        cameraHolder.Rotate(-verticalRotation*mouseSensitivity,0,0);
+        Vector3 currentRotation = cameraHolder.localEulerAngles;
+        if (currentRotation.x > 180) currentRotation.x -= 360;
+        currentRotation.x = Mathf.Clamp(currentRotation.x, upLimit, downLimit);
+        cameraHolder.localRotation = Quaternion.Euler(currentRotation);
     }
     
 
