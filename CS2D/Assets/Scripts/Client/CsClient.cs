@@ -34,6 +34,7 @@ public class CsClient : MonoBehaviour
     public String serverIP = "192.168.1.137";
     private GameObject mainCamera;
     public GameObject cameraPrefab;
+    private bool shooting;
 
     private Animator animator;
     // Start is called before the first frame update
@@ -107,6 +108,15 @@ public class CsClient : MonoBehaviour
         }
         UpdateClient();
         InterpolateAndConciliate();
+        
+        if (Input.GetKeyDown(KeyCode.LeftShift))
+        {
+            shooting = true;
+        }
+        if(Input.GetKeyUp(KeyCode.LeftShift))
+        {
+            shooting = false;
+        }
     }
 
     public void FixedUpdate()
@@ -245,10 +255,25 @@ public class CsClient : MonoBehaviour
     {
         var timeout = Time.time + 2;
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"));
+            Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"), 
+            Input.GetKey(KeyCode.Space), shooting);
         commandServer.Add(command);
         packetNumber++;
-        animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
+        if (command.Shoot)
+        {
+            animator.SetBool("shooting", true);
+        } else if (!characterController.isGrounded)
+        {
+            animator.SetBool("isJumping", true);
+            animator.SetBool("shooting", false);
+        }
+        else
+        {
+            animator.SetBool("shooting",false);
+            animator.SetBool("isJumping", false);
+            animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
+        }
+        Debug.Log(animator.GetBool("shooting"));
         Execute(command, client, characterController);
         LocalCameraRotate();
     }
