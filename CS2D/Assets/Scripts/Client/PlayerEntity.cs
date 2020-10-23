@@ -105,7 +105,7 @@ public class PlayerEntity
             {
                 var previous = currentPlayer.Value;
                 var next = nextEntities.playerEntities[previous.id];
-                var playerEntity = new PlayerEntity(previous.playerGameObject, next.id);
+                var playerEntity = new PlayerEntity(previous.playerGameObject, previous.command, next.id);
                 playerEntity.position = playerEntity.position + Vector3.Lerp(previous.position, next.position, t);
                 var deltaRot = Quaternion.Lerp(previous.rotation, next.rotation, t);
                 var rot = new Quaternion();
