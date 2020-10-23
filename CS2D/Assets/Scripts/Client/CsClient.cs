@@ -87,6 +87,8 @@ public class CsClient : MonoBehaviour
         conciliateCharacterController = conciliateGameObject.GetComponent<CharacterController>();
         Destroy(conciliateGameObject.GetComponent<Animator>());
         conciliateCharacterController.transform.GetChild(1).gameObject.active = false;
+        conciliateCharacterController.transform.GetChild(0).gameObject.active = false;
+
 
     }
 
@@ -109,11 +111,11 @@ public class CsClient : MonoBehaviour
         UpdateClient();
         InterpolateAndConciliate();
         
-        if (Input.GetKeyDown(KeyCode.LeftShift))
+        if (Input.GetMouseButtonDown(0))
         {
             shooting = true;
         }
-        if(Input.GetKeyUp(KeyCode.LeftShift))
+        if(Input.GetMouseButtonUp(0))
         {
             shooting = false;
         }
@@ -247,7 +249,12 @@ public class CsClient : MonoBehaviour
             Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
         }
 
-        client.transform.position = conciliateGameObject.transform.position;
+        var svPos = conciliateGameObject.transform.position;
+
+        var yPos = Math.Abs(svPos.y - client.transform.position.y) > 4 ? svPos.y : client.transform.position.y; 
+        var clientPos = new Vector3( svPos.x, yPos, svPos.z);
+
+        client.transform.position = clientPos;
         client.transform.rotation = conciliateGameObject.transform.rotation;
     }
 
@@ -262,17 +269,24 @@ public class CsClient : MonoBehaviour
         if (command.Shoot)
         {
             animator.SetBool("shooting", true);
-        } else if (!characterController.isGrounded)
+        }
+        else
+        {
+            animator.SetBool("shooting", false);
+        } 
+        
+        if (!characterController.isGrounded)
         {
             animator.SetBool("isJumping", true);
             animator.SetBool("shooting", false);
         }
         else
         {
-            animator.SetBool("shooting",false);
             animator.SetBool("isJumping", false);
-            animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
         }
+
+        animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
+        
         Debug.Log(animator.GetBool("shooting"));
         Execute(command, client, characterController);
         LocalCameraRotate();
