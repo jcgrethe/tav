@@ -120,9 +120,7 @@ public class PlayerEntity
                 }
                 else
                 {
-                    Debug.LogError("KEY" + currentPlayer.Key);
-                    //Debug.LogError("KEY" + currentPlayer.Key);
-
+                    Debug.Log("KEY" + currentPlayer.Key);
                 }
 
                 newEntities.Add(playerEntity.id, playerEntity);
