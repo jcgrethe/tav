@@ -185,6 +185,7 @@ public class CsClient : MonoBehaviour
     private void AwaitJoinGame(Packet packet)
     {
         var quan = packet.buffer.GetBits(0, 50);
+        Debug.LogError(" TO JOIN " + quan);
         for (int i = 0; i < quan; i++)
         {
             var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
@@ -194,7 +195,7 @@ public class CsClient : MonoBehaviour
             clients.Add(enemyClient.name, enemyClient);  
         }
 
-        Debug.Log("JOINED");
+        Debug.LogError("JOINED");
         join = true;
         
     }
@@ -239,6 +240,7 @@ public class CsClient : MonoBehaviour
     
     private void Interpolate() 
     {
+        if (!join) return;
         var previousTime = (interpolationBuffer[0]).packetNumber * (1f/pps);
         var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
