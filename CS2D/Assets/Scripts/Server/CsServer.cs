@@ -103,7 +103,7 @@ public class CsServer : MonoBehaviour
         //send ack and current players
         var packetToSend = Packet.Obtain();
         packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
-        packetToSend.buffer.PutUInt(playerServer.Count - 1);
+        packetToSend.buffer.PutBits(playerServer.Count - 1, 0, 50);
         foreach (var kv in playerServer)
         {
             if (!kv.Key.Equals(client.name))
