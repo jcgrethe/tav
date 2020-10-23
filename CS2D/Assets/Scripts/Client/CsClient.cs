@@ -302,11 +302,15 @@ public class CsClient : MonoBehaviour
         else
         {
             animator.SetBool("crouch", false);
-        } 
+        }
 
-        animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
-        
-        Debug.Log(animator.GetBool("shooting"));
+        //Debug.Log("VERT" + command.VerticalMove);
+        //Debug.Log("HOR"+ command.HorizontalMove);
+
+        animator.SetBool("isWalking", command.VerticalMove > 0 || command.HorizontalMove != 0);
+        animator.SetBool("isWalkingBackward", command.VerticalMove < 0);
+
+
         Execute(command, client, characterController);
         LocalCameraRotate();
     }
