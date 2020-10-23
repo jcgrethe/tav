@@ -141,29 +141,26 @@ public class CsServer : MonoBehaviour
         //generate word
         foreach (var auxPlayerEntity in playerServer)
         {
-            if (lastCommandObject.ContainsKey(auxPlayerEntity.Key))
-            {
-                var playerEntity = new PlayerEntity(auxPlayerEntity.Value, lastCommandObject[auxPlayerEntity.Key],
-                    auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
-                snapshot.Add(playerEntity);
-            }
+            var auxCommand = 
+                lastCommandObject.ContainsKey(auxPlayerEntity.Key) ? lastCommandObject[auxPlayerEntity.Key] : new Command();
+            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxCommand, auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
+            snapshot.Add(playerEntity);
+            
         }
         foreach (var kv in playerIps)
         {
-            if (lastCommandObject.ContainsKey(kv.Key))
-            {
-                var auxPlayerId = kv.Key;
-                snapshot.packetNumber = lastSnapshot[auxPlayerId];
-                lastSnapshot[auxPlayerId]++;
-                //serialize
-                var updatePacket = Packet.Obtain();
-                updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
-                snapshot.Serialize(updatePacket.buffer);
-                updatePacket.buffer.Flush();
+            var auxPlayerId = kv.Key;
+            snapshot.packetNumber = lastSnapshot[auxPlayerId];
+            lastSnapshot[auxPlayerId]++;
+            //serialize
+            var updatePacket = Packet.Obtain();
+            updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
+            snapshot.Serialize(updatePacket.buffer);
+            updatePacket.buffer.Flush();
 
-                string serverIP = kv.Value;
-                Send(serverIP, clientPort, channel, updatePacket);
-            }
+            string serverIP = kv.Value;
+            Send(serverIP, clientPort, channel, updatePacket);
+        
         }
 
         packetNumber++;

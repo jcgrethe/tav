@@ -20,7 +20,7 @@ public class AnimatorStates
     
     public static bool HorizontalMoveNeg(Command command)
     {
-        return command.VerticalMove < 0;
+        return command.HorizontalMove < 0;
     }
     
     public static bool IsCrouch(Command command)

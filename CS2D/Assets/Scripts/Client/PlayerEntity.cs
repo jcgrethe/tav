@@ -114,7 +114,16 @@ public class PlayerEntity
                 rot.y = previous.rotation.y + deltaRot.y;
                 rot.z = previous.rotation.z + deltaRot.z;
                 playerEntity.rotation = rot;
-                playerEntity.playerGameObject = players[currentPlayer.Key];
+                if (players.ContainsKey(currentPlayer.Key))
+                {
+                    playerEntity.playerGameObject = players[currentPlayer.Key];
+                }
+                else
+                {
+                    Debug.Log("ERRORRRRRR");
+                    Debug.LogError("ERRROORRR");
+                }
+
                 newEntities.Add(playerEntity.id, playerEntity);
             }
         }
