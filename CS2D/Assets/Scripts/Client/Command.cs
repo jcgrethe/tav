@@ -10,6 +10,7 @@ public class Command
     private float horizontalRotation;
     private bool jump;
     private bool shoot;
+    private bool crouch;
     
     public float HorizontalRotation => horizontalRotation;
 
@@ -20,6 +21,7 @@ public class Command
 
     public bool Shoot => shoot;
 
+    public bool Crouch => crouch;
 
     
     public Command()
@@ -27,7 +29,7 @@ public class Command
     }
 
     public Command(int commandNumber, float horizontalMove, float verticalMove, float timestamp,
-        float horizontalRotation, bool jump, bool shoot)
+        float horizontalRotation, bool jump, bool shoot, bool crouch)
     {
         this.commandNumber = commandNumber;
         this.horizontalMove = horizontalMove;
@@ -36,6 +38,7 @@ public class Command
         this.horizontalRotation = horizontalRotation;
         this.jump = jump;
         this.shoot = shoot;
+        this.crouch = crouch;
     }
 
     public void Serialize(BitBuffer buffer)
@@ -46,7 +49,7 @@ public class Command
         buffer.PutFloat(horizontalRotation);
         buffer.PutBit(jump);
         buffer.PutBit(shoot);
-
+        buffer.PutBit(crouch);
     }
     
     
@@ -58,6 +61,7 @@ public class Command
         horizontalRotation = buffer.GetFloat();
         jump = buffer.GetBit();
         shoot = buffer.GetBit();
+        crouch = buffer.GetBit();
     }
 
     public bool isSendable()

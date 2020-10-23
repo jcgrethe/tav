@@ -35,6 +35,8 @@ public class CsClient : MonoBehaviour
     private GameObject mainCamera;
     public GameObject cameraPrefab;
     private bool shooting;
+    private bool crouch;
+
 
     private Animator animator;
     // Start is called before the first frame update
@@ -118,6 +120,14 @@ public class CsClient : MonoBehaviour
         if(Input.GetMouseButtonUp(0))
         {
             shooting = false;
+        }
+        if (Input.GetKeyDown(KeyCode.LeftControl))
+        {
+            crouch = true;
+        }
+        if(Input.GetKeyUp(KeyCode.LeftControl))
+        {
+            crouch = false;
         }
     }
 
@@ -263,7 +273,7 @@ public class CsClient : MonoBehaviour
         var timeout = Time.time + 2;
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"), 
-            Input.GetKey(KeyCode.Space), shooting);
+            Input.GetKey(KeyCode.Space), shooting, crouch);
         commandServer.Add(command);
         packetNumber++;
         if (command.Shoot)
@@ -284,6 +294,15 @@ public class CsClient : MonoBehaviour
         {
             animator.SetBool("isJumping", false);
         }
+        
+        if (command.Crouch)
+        {
+            animator.SetBool("crouch", true);
+        }
+        else
+        {
+            animator.SetBool("crouch", false);
+        } 
 
         animator.SetBool("isWalking", command.VerticalMove != 0 || command.HorizontalMove != 0);
         
