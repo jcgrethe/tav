@@ -307,9 +307,10 @@ public class CsClient : MonoBehaviour
         //Debug.Log("VERT" + command.VerticalMove);
         //Debug.Log("HOR"+ command.HorizontalMove);
 
-        animator.SetBool("isWalking", command.VerticalMove > 0 || command.HorizontalMove != 0);
+        animator.SetBool("isWalking", command.VerticalMove > 0);
         animator.SetBool("isWalkingBackward", command.VerticalMove < 0);
-
+        animator.SetBool("isWalkingRight", command.HorizontalMove > 0);
+        animator.SetBool("isWalkingLeft", command.HorizontalMove < 0);
 
         Execute(command, client, characterController);
         LocalCameraRotate();
