@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static AnimatorStates;
 using static SendUtil;
 using static ExecuteCommand;
 
@@ -193,7 +194,6 @@ public class CsClient : MonoBehaviour
             clients.Add(enemyClient.name, enemyClient);  
         }
 
-        Debug.Log("JOINED");
         join = true;
         
     }
@@ -238,6 +238,7 @@ public class CsClient : MonoBehaviour
     
     private void Interpolate() 
     {
+        if (!join) return;
         var previousTime = (interpolationBuffer[0]).packetNumber * (1f/pps);
         var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
@@ -276,41 +277,14 @@ public class CsClient : MonoBehaviour
             Input.GetKey(KeyCode.Space), shooting, crouch);
         commandServer.Add(command);
         packetNumber++;
-        if (command.Shoot)
-        {
-            animator.SetBool("shooting", true);
-        }
-        else
-        {
-            animator.SetBool("shooting", false);
-        } 
-        
-        if (!characterController.isGrounded)
-        {
-            animator.SetBool("isJumping", true);
-            animator.SetBool("shooting", false);
-        }
-        else
-        {
-            animator.SetBool("isJumping", false);
-        }
-        
-        if (command.Crouch)
-        {
-            animator.SetBool("crouch", true);
-        }
-        else
-        {
-            animator.SetBool("crouch", false);
-        }
 
-        //Debug.Log("VERT" + command.VerticalMove);
-        //Debug.Log("HOR"+ command.HorizontalMove);
-
-        animator.SetBool("isWalking", command.VerticalMove > 0);
-        animator.SetBool("isWalkingBackward", command.VerticalMove < 0);
-        animator.SetBool("isWalkingRight", command.HorizontalMove > 0);
-        animator.SetBool("isWalkingLeft", command.HorizontalMove < 0);
+        animator.SetBool("isJumping", isJumping(characterController));
+        animator.SetBool("shooting", IsShooting(command));
+        animator.SetBool("crouch", IsCrouch(command));
+        animator.SetBool("isWalking", VerticalMovePos(command));
+        animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
+        animator.SetBool("isWalkingRight", HorizontalMovePos(command));
+        animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
 
         Execute(command, client, characterController);
         LocalCameraRotate();

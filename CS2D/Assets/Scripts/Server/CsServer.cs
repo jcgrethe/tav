@@ -21,7 +21,7 @@ public class CsServer : MonoBehaviour
     private float accum3;
     public GameObject ServerPrefab;
     private Dictionary<String, int> lastSnapshot;
-
+    private Dictionary<String, Command> lastCommandObject;
     private int pos = 648;
 
     private int clientPort = 9001;
@@ -36,6 +36,7 @@ public class CsServer : MonoBehaviour
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
         lastSnapshot = new Dictionary<string, int>();
+        lastCommandObject = new Dictionary<string, Command>();
 
     }
 
@@ -74,7 +75,6 @@ public class CsServer : MonoBehaviour
     {
         //if (playerServer.Count > maxPlayers) return;
         //join player y send player alreeady in server
-        Debug.Log("NEW PLAYER");
         var client = createPlayer(GetRandomSpot());
         pos += 2;
         client.GetComponent<PlayerId>().Id = packet.buffer.GetString();
@@ -102,7 +102,7 @@ public class CsServer : MonoBehaviour
         //send ack and current players
         var packetToSend = Packet.Obtain();
         packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
-        packetToSend.buffer.PutUInt(playerServer.Count - 1);
+        packetToSend.buffer.PutBits(playerServer.Count - 1, 0, 50);
         foreach (var kv in playerServer)
         {
             if (!kv.Key.Equals(client.name))
@@ -140,12 +140,15 @@ public class CsServer : MonoBehaviour
         //generate word
         foreach (var auxPlayerEntity in playerServer)
         {
-            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
+            var auxCommand = 
+                lastCommandObject.ContainsKey(auxPlayerEntity.Key) ? lastCommandObject[auxPlayerEntity.Key] : new Command();
+            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxCommand, auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
             snapshot.Add(playerEntity);
+            
         }
         foreach (var kv in playerIps)
         {
-            var auxPlayerId = kv.Key;	
+            var auxPlayerId = kv.Key;
             snapshot.packetNumber = lastSnapshot[auxPlayerId];
             lastSnapshot[auxPlayerId]++;
             //serialize
@@ -156,6 +159,7 @@ public class CsServer : MonoBehaviour
 
             string serverIP = kv.Value;
             Send(serverIP, clientPort, channel, updatePacket);
+        
         }
 
         packetNumber++;
@@ -177,6 +181,7 @@ public class CsServer : MonoBehaviour
             {
                 ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
                 max = commands.commandNumber;
+                lastCommandObject[id] = commands;
             }
         }
 
