@@ -4,11 +4,14 @@ using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
 using static SendUtil;
+using Random = UnityEngine.Random;
 
 public class CsServer : MonoBehaviour
 {
     
     private Channel channel;
+
+    public int maxPlayers = 6;  
 
     public int pps;
     private float accum;
@@ -24,6 +27,8 @@ public class CsServer : MonoBehaviour
     private int clientPort = 9001;
     private int packetNumber = 0;
 
+    public List<GameObject> spots;
+    
     public void Awake()
     {
         channel = new Channel(9000);
@@ -67,9 +72,10 @@ public class CsServer : MonoBehaviour
 
     private void NewPlayer(Packet packet)
     {
+        if (cubeServer.Count > maxPlayers) return;
         //join player y send player alreeady in server
         Debug.Log("NEW PLAYER");
-        var client = createPlayer(new Vector3(343.2f, 1109.8f, pos + 2 ));
+        var client = createPlayer(GetRandomSpot());
         pos += 2;
         client.GetComponent<PlayerId>().Id = packet.buffer.GetString();
         client.name = client.GetComponent<PlayerId>().Id;
@@ -109,6 +115,23 @@ public class CsServer : MonoBehaviour
         string serverIP = playerIps[client.name];
         Send(serverIP, clientPort, channel, packetToSend);
         
+    }
+
+    private Vector3 GetRandomSpot()
+    {
+        int i = 0;
+        while (i < 100)
+        {
+            var posibleSpot = spots[Random.Range(0, 6)];
+            if (posibleSpot.GetComponent<Spot>().IsSpotable())
+            {
+                return posibleSpot.transform.position;
+            }
+
+            i++;
+        }
+
+        return spots[Random.Range(0, 5)].transform.position;
     }
 
     private void UpdateClientWord()
