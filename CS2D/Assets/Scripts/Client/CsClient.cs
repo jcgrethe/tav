@@ -183,7 +183,7 @@ public class CsClient : MonoBehaviour
 
     private void AwaitJoinGame(Packet packet)
     {
-        var quan = packet.buffer.GetUInt();
+        var quan = packet.buffer.GetBits(0, 50);
         for (int i = 0; i < quan; i++)
         {
             var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
