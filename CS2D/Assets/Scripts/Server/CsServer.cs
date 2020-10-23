@@ -150,17 +150,20 @@ public class CsServer : MonoBehaviour
         }
         foreach (var kv in playerIps)
         {
-            var auxPlayerId = kv.Key;	
-            snapshot.packetNumber = lastSnapshot[auxPlayerId];
-            lastSnapshot[auxPlayerId]++;
-            //serialize
-            var updatePacket = Packet.Obtain();
-            updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
-            snapshot.Serialize(updatePacket.buffer);
-            updatePacket.buffer.Flush();
+            if (lastCommandObject.ContainsKey(kv.Key))
+            {
+                var auxPlayerId = kv.Key;
+                snapshot.packetNumber = lastSnapshot[auxPlayerId];
+                lastSnapshot[auxPlayerId]++;
+                //serialize
+                var updatePacket = Packet.Obtain();
+                updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
+                snapshot.Serialize(updatePacket.buffer);
+                updatePacket.buffer.Flush();
 
-            string serverIP = kv.Value;
-            Send(serverIP, clientPort, channel, updatePacket);
+                string serverIP = kv.Value;
+                Send(serverIP, clientPort, channel, updatePacket);
+            }
         }
 
         packetNumber++;

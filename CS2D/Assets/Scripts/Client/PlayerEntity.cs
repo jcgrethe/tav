@@ -11,25 +11,13 @@ public class PlayerEntity
     public Vector3 position;
     public Quaternion rotation;
     public GameObject playerGameObject;
+    private Command command;
 
-    //private bool isJumping;", ;
-    private bool shooting;
-    private bool crouch;
-    private bool isWalking;
-    private bool isWalkingBackward;
-    private bool isWalkingRight;
-    private bool isWalkingLeft;
-    
     public PlayerEntity(GameObject playerGameObject, Command command, String id)
     {
         this.playerGameObject = playerGameObject;
         //isJumping = isJumping(characterController);
-        shooting = IsShooting(command);
-        crouch = IsCrouch(command);
-        isWalking = VerticalMovePos(command);
-        isWalkingBackward = VerticalMoveNeg(command);
-        isWalkingRight = HorizontalMovePos(command);
-        isWalkingLeft = HorizontalMoveNeg(command);
+        this.command = command;
         this.id = id;
     }
     
@@ -87,12 +75,7 @@ public class PlayerEntity
         buffer.PutFloat(rotation.y);
         buffer.PutFloat(rotation.z);
       
-        buffer.PutBit(shooting);
-        buffer.PutBit(crouch);
-        buffer.PutBit(isWalking);
-        buffer.PutBit(isWalkingBackward);
-        buffer.PutBit(isWalkingRight);
-        buffer.PutBit(isWalkingLeft);
+        command.Serialize(buffer);
 
     }
     
@@ -108,12 +91,8 @@ public class PlayerEntity
         rotation.y = buffer.GetFloat();
         rotation.z = buffer.GetFloat();
 
-        shooting = buffer.GetBit();
-        crouch = buffer.GetBit();
-        isWalking = buffer.GetBit();
-        isWalkingBackward = buffer.GetBit();
-        isWalkingRight = buffer.GetBit();
-        isWalkingLeft = buffer.GetBit();
+        command = new Command();
+        command.Deserialize(buffer);
     }
 
     public static Dictionary<String, PlayerEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities,
@@ -143,18 +122,20 @@ public class PlayerEntity
         return newEntities;
     }
 
-    public void Apply(Animator animator)
+    public void Apply()
     {
         if (playerGameObject != null)
         {
+            var animator = playerGameObject.GetComponent<Animator>();
             playerGameObject.transform.position = position;
             playerGameObject.transform.rotation = rotation;
-            animator.SetBool("shooting", shooting);
-            animator.SetBool("crouch", crouch);
-            animator.SetBool("isWalking", isWalking);
-            animator.SetBool("isWalkingBackward", isWalkingBackward);
-            animator.SetBool("isWalkingRight", isWalkingRight);
-            animator.SetBool("isWalkingLeft", isWalkingLeft);
+            //animator.SetBool("isJumping", isJumping(characterController));
+            animator.SetBool("shooting", IsShooting(command));
+            animator.SetBool("crouch", IsCrouch(command));
+            animator.SetBool("isWalking", VerticalMovePos(command));
+            animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
+            animator.SetBool("isWalkingRight", HorizontalMovePos(command));
+            animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
         }
     }
     

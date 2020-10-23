@@ -243,7 +243,7 @@ public class CsClient : MonoBehaviour
         var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
         var interpolatedSnapshot = Snapshot.CreateInterpolated(interpolationBuffer[0], interpolationBuffer[1], t, clients, client.name);
-        interpolatedSnapshot.Apply(clients);
+        interpolatedSnapshot.Apply();
 
         if (clientTime > nextTime) {
             interpolationBuffer.RemoveAt(0);

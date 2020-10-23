@@ -59,11 +59,11 @@ public class Snapshot
         return new Snapshot(-1, playersMap);
     }
 
-    public void Apply(Dictionary<String, GameObject> clients)
+    public void Apply()
     {
         foreach (var playerEntity in playerEntities)
         { 
-            playerEntity.Value.Apply(clients[playerEntity.Key].GetComponent<Animator>());
+            playerEntity.Value.Apply();
         }
     }
 
