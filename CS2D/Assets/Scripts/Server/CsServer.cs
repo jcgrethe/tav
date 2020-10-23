@@ -15,7 +15,7 @@ public class CsServer : MonoBehaviour
 
     public int pps;
     private float accum;
-    private Dictionary<String, GameObject> cubeServer;
+    private Dictionary<String, GameObject> playerServer;
     private Dictionary<String, int> lastCommand;
     private Dictionary<String, String> playerIps;
     private float accum3;
@@ -32,7 +32,7 @@ public class CsServer : MonoBehaviour
     public void Awake()
     {
         channel = new Channel(9000);
-        cubeServer = new Dictionary<string, GameObject>();
+        playerServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
         lastSnapshot = new Dictionary<string, int>();
@@ -72,7 +72,7 @@ public class CsServer : MonoBehaviour
 
     private void NewPlayer(Packet packet)
     {
-        if (cubeServer.Count > maxPlayers) return;
+        if (playerServer.Count > maxPlayers) return;
         //join player y send player alreeady in server
         Debug.Log("NEW PLAYER");
         var client = createPlayer(GetRandomSpot());
@@ -81,7 +81,7 @@ public class CsServer : MonoBehaviour
         client.name = client.GetComponent<PlayerId>().Id;
         Destroy(client.GetComponent<Animator>());
         client.transform.GetChild(1).gameObject.active = false;
-        cubeServer.Add(client.name, client);
+        playerServer.Add(client.name, client);
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
 
@@ -102,8 +102,8 @@ public class CsServer : MonoBehaviour
         //send ack and current players
         var packetToSend = Packet.Obtain();
         packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
-        packetToSend.buffer.PutUInt(cubeServer.Count - 1);
-        foreach (var kv in cubeServer)
+        packetToSend.buffer.PutUInt(playerServer.Count - 1);
+        foreach (var kv in playerServer)
         {
             if (!kv.Key.Equals(client.name))
             {
@@ -138,10 +138,10 @@ public class CsServer : MonoBehaviour
     {
         var snapshot = new Snapshot();
         //generate word
-        foreach (var auxCubeEntity in cubeServer)
+        foreach (var auxPlayerEntity in playerServer)
         {
-            var cubeEntity = new CubeEntity(auxCubeEntity.Value, auxCubeEntity.Value.GetComponent<PlayerId>().Id);
-            snapshot.Add(cubeEntity);
+            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
+            snapshot.Add(playerEntity);
         }
         foreach (var kv in playerIps)
         {
@@ -167,7 +167,7 @@ public class CsServer : MonoBehaviour
         
         String id = packet.buffer.GetString();
         int quantity = packet.buffer.GetUInt();
-        var player = cubeServer[id];
+        var player = playerServer[id];
         var currentLastCommand = lastCommand[id];
         int max = currentLastCommand;
         for (int i = 0; i < quantity; i++){

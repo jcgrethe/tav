@@ -5,38 +5,38 @@ using UnityEngine;
 
 public class Snapshot
 {
-    public Dictionary<String, CubeEntity> cubeEntities;
+    public Dictionary<String, PlayerEntity> playerEntities;
     public int packetNumber;
 
     public Snapshot(int packetNumber)
     {
         this.packetNumber = packetNumber;
-        cubeEntities = new Dictionary<string, CubeEntity>();
+        playerEntities = new Dictionary<string, PlayerEntity>();
     }
 
     public Snapshot()
     {
-        cubeEntities = new Dictionary<string, CubeEntity>();
+        playerEntities = new Dictionary<string, PlayerEntity>();
     }
 
-    public Snapshot(int packetNumber, Dictionary<String, CubeEntity> cubeEntities)
+    public Snapshot(int packetNumber, Dictionary<String, PlayerEntity> playerEntities)
     {
         this.packetNumber = packetNumber;
-        this.cubeEntities = cubeEntities;
+        this.playerEntities = playerEntities;
     }
 
-    public void Add(CubeEntity cubeEntity)
+    public void Add(PlayerEntity playerEntity)
     {
-        cubeEntities.Add(cubeEntity.id, cubeEntity);
+        playerEntities.Add(playerEntity.id, playerEntity);
     }
     
     public void Serialize(BitBuffer buffer)
     {
         buffer.PutUInt(packetNumber);
-        buffer.PutBits(cubeEntities.Count, 0, 50);
-        foreach (var cubeEntity in cubeEntities)
+        buffer.PutBits(playerEntities.Count, 0, 50);
+        foreach (var playerEntity in playerEntities)
         {
-            cubeEntity.Value.Serialize(buffer);
+            playerEntity.Value.Serialize(buffer);
         }
     }
     
@@ -46,24 +46,24 @@ public class Snapshot
         var quatity = buffer.GetBits(0, 50);
         for (int i = 0; i < quatity; i++)
         {
-            var cubeEntity = new CubeEntity();
-            cubeEntity.Deserialize(buffer);
-            cubeEntities.Add(cubeEntity.id, cubeEntity);
+            var playerEntity = new PlayerEntity();
+            playerEntity.Deserialize(buffer);
+            playerEntities.Add(playerEntity.id, playerEntity);
         }
         
     }
     
     public static Snapshot CreateInterpolated(Snapshot previous, Snapshot next, float t, Dictionary<String, GameObject> players, String id)
     {
-        var cubes = CubeEntity.createInterpolated(previous, next, t, players, id);
-        return new Snapshot(-1, cubes);
+        var playersMap = PlayerEntity.createInterpolated(previous, next, t, players, id);
+        return new Snapshot(-1, playersMap);
     }
 
     public void Apply()
     {
-        foreach (var cubeEntity in cubeEntities)
+        foreach (var playerEntity in playerEntities)
         { 
-            cubeEntity.Value.Apply();
+            playerEntity.Value.Apply();
         }
     }
 

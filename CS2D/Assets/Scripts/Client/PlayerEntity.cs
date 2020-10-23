@@ -3,29 +3,29 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class CubeEntity
+public class PlayerEntity
 {
 
     public String id;
     public Vector3 position;
     public Quaternion rotation;
-    public GameObject cubeGameObject;
+    public GameObject playerGameObject;
 
-    public CubeEntity(GameObject cubeGameObject, String id)
+    public PlayerEntity(GameObject playerGameObject, String id)
     {
-        this.cubeGameObject = cubeGameObject;
+        this.playerGameObject = playerGameObject;
         this.id = id;
     }
 
-    public CubeEntity()
+    public PlayerEntity()
     {
         
     }
 
     public void Serialize(BitBuffer buffer)
     {
-        position = cubeGameObject.transform.position;
-        rotation = cubeGameObject.transform.rotation;
+        position = playerGameObject.transform.position;
+        rotation = playerGameObject.transform.rotation;
         buffer.PutString(id);
         buffer.PutFloat(position.x);
         buffer.PutFloat(position.y);
@@ -51,27 +51,27 @@ public class CubeEntity
         //Debug.Log(rotation);
     }
 
-    public static Dictionary<String, CubeEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities,
+    public static Dictionary<String, PlayerEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities,
         float t, Dictionary<String, GameObject> players, String id)
     {
-        var newEntities = new Dictionary<string, CubeEntity>();
-        foreach (var currentPlayer in previousEntities.cubeEntities)
+        var newEntities = new Dictionary<string, PlayerEntity>();
+        foreach (var currentPlayer in previousEntities.playerEntities)
         {
             if (!currentPlayer.Key.Equals(id))
             {
                 var previous = currentPlayer.Value;
-                var next = nextEntities.cubeEntities[previous.id];
-                var cubeEntity = new CubeEntity(previous.cubeGameObject, next.id);
-                cubeEntity.position = cubeEntity.position + Vector3.Lerp(previous.position, next.position, t);
+                var next = nextEntities.playerEntities[previous.id];
+                var playerEntity = new PlayerEntity(previous.playerGameObject, next.id);
+                playerEntity.position = playerEntity.position + Vector3.Lerp(previous.position, next.position, t);
                 var deltaRot = Quaternion.Lerp(previous.rotation, next.rotation, t);
                 var rot = new Quaternion();
                 rot.x = previous.rotation.x + deltaRot.x;
                 rot.w = previous.rotation.w + deltaRot.w;
                 rot.y = previous.rotation.y + deltaRot.y;
                 rot.z = previous.rotation.z + deltaRot.z;
-                cubeEntity.rotation = rot;
-                cubeEntity.cubeGameObject = players[currentPlayer.Key];
-                newEntities.Add(cubeEntity.id, cubeEntity);
+                playerEntity.rotation = rot;
+                playerEntity.playerGameObject = players[currentPlayer.Key];
+                newEntities.Add(playerEntity.id, playerEntity);
             }
         }
 
@@ -80,10 +80,10 @@ public class CubeEntity
 
     public void Apply()
     {
-        if (cubeGameObject != null)
+        if (playerGameObject != null)
         {
-            cubeGameObject.transform.position = position;
-            cubeGameObject.transform.rotation = rotation;
+            playerGameObject.transform.position = position;
+            playerGameObject.transform.rotation = rotation;
         }
     }
     

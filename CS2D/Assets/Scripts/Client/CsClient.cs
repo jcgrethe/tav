@@ -77,8 +77,8 @@ public class CsClient : MonoBehaviour
         var packet4 = Packet.Obtain();
         packet4.buffer.PutEnum(MessageCsType.messagetype.newPlayer, 5);
         packet4.buffer.PutString(id);
-        var cube = new CubeEntity(client, id);
-        cube.Serialize(packet4.buffer);
+        var player = new PlayerEntity(client, id);
+        player.Serialize(packet4.buffer);
         packet4.buffer.Flush();
 
         Send(serverIP, serverPort, channel, packet4);
@@ -251,7 +251,7 @@ public class CsClient : MonoBehaviour
 
     private void Conciliate()
     {
-        var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].cubeEntities[client.name];
+        var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
         foreach (var auxCommand in commandServer)
