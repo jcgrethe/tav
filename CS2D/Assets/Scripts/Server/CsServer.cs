@@ -84,7 +84,7 @@ public class CsServer : MonoBehaviour
         {
             var auxPacket = Packet.Obtain();
             auxPacket.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
-            auxPacket.buffer.PutInt(1);
+            auxPacket.buffer.PutBits(1, 0, 50);
             auxPacket.buffer.PutString(client.name);
             auxPacket.buffer.Flush();
             Send(kv.Value, clientPort, channel, auxPacket);
@@ -96,7 +96,7 @@ public class CsServer : MonoBehaviour
         //send ack and current players
         var packetToSend = Packet.Obtain();
         packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
-        packetToSend.buffer.PutInt(cubeServer.Count - 1);
+        packetToSend.buffer.PutUInt(cubeServer.Count - 1);
         foreach (var kv in cubeServer)
         {
             if (!kv.Key.Equals(client.name))
@@ -143,7 +143,7 @@ public class CsServer : MonoBehaviour
         //receive input
         
         String id = packet.buffer.GetString();
-        int quantity = packet.buffer.GetInt();
+        int quantity = packet.buffer.GetUInt();
         var player = cubeServer[id];
         var currentLastCommand = lastCommand[id];
         int max = currentLastCommand;
@@ -162,7 +162,7 @@ public class CsServer : MonoBehaviour
         //send ack
         var packet3 = Packet.Obtain();
         packet3.buffer.PutEnum(MessageCsType.messagetype.ackInput, 5);
-        packet3.buffer.PutInt(max);
+        packet3.buffer.PutUInt(max);
         packet3.buffer.Flush();
         string serverIP = playerIps[id];
         Send(serverIP, clientPort, channel, packet3);

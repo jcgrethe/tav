@@ -32,8 +32,8 @@ public class Snapshot
     
     public void Serialize(BitBuffer buffer)
     {
-        buffer.PutInt(packetNumber);
-        buffer.PutInt(cubeEntities.Count);
+        buffer.PutUInt(packetNumber);
+        buffer.PutBits(cubeEntities.Count, 0, 50);
         foreach (var cubeEntity in cubeEntities)
         {
             cubeEntity.Value.Serialize(buffer);
@@ -42,8 +42,8 @@ public class Snapshot
     
     public void Deserialize(BitBuffer buffer)
     {
-        packetNumber = buffer.GetInt();
-        var quatity = buffer.GetInt();
+        packetNumber = buffer.GetUInt();
+        var quatity = buffer.GetBits(0, 50);
         for (int i = 0; i < quatity; i++)
         {
             var cubeEntity = new CubeEntity();

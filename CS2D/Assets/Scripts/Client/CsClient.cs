@@ -166,7 +166,7 @@ public class CsClient : MonoBehaviour
             var packet2 = Packet.Obtain();
             packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
             packet2.buffer.PutString(client.name);
-            packet2.buffer.PutInt(commandServer.Count);
+            packet2.buffer.PutUInt(commandServer.Count);
             foreach (var currentCommand in commandServer)
             {
                 currentCommand.Serialize(packet2.buffer);
@@ -183,7 +183,7 @@ public class CsClient : MonoBehaviour
 
     private void AwaitJoinGame(Packet packet)
     {
-        var quan = packet.buffer.GetInt();
+        var quan = packet.buffer.GetUInt();
         for (int i = 0; i < quan; i++)
         {
             var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
@@ -200,7 +200,7 @@ public class CsClient : MonoBehaviour
 
     private void UpdateInterpolationBuffer(Packet packet)
     {
-        var toDel = packet.buffer.GetInt();
+        var toDel = packet.buffer.GetUInt();
         while (commandServer.Count != 0)
         {
             if (commandServer[0].commandNumber <= toDel)

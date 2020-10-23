@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class Command
@@ -43,7 +44,7 @@ public class Command
 
     public void Serialize(BitBuffer buffer)
     {
-        buffer.PutInt(commandNumber);
+        buffer.PutUInt(commandNumber);
         buffer.PutFloat(horizontalMove);
         buffer.PutFloat(verticalMove);
         buffer.PutFloat(horizontalRotation);
@@ -55,7 +56,7 @@ public class Command
     
     public void Deserialize(BitBuffer buffer)
     {
-        commandNumber = buffer.GetInt();
+        commandNumber = buffer.GetUInt();
         horizontalMove = buffer.GetFloat();
         verticalMove = buffer.GetFloat();
         horizontalRotation = buffer.GetFloat();
