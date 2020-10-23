@@ -75,7 +75,6 @@ public class CsServer : MonoBehaviour
     {
         //if (playerServer.Count > maxPlayers) return;
         //join player y send player alreeady in server
-        Debug.Log("NEW PLAYER");
         var client = createPlayer(GetRandomSpot());
         pos += 2;
         client.GetComponent<PlayerId>().Id = packet.buffer.GetString();
