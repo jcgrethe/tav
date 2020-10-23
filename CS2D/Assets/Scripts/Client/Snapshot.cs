@@ -36,7 +36,7 @@ public class Snapshot
         buffer.PutBits(playerEntities.Count, 0, 50);
         foreach (var playerEntity in playerEntities)
         {
-            playerEntity.Value.Serialize(buffer);
+            playerEntity.Value.SerializeWithCommand(buffer);
         }
     }
     
@@ -47,7 +47,7 @@ public class Snapshot
         for (int i = 0; i < quatity; i++)
         {
             var playerEntity = new PlayerEntity();
-            playerEntity.Deserialize(buffer);
+            playerEntity.DeserializeWithCommand(buffer);
             playerEntities.Add(playerEntity.id, playerEntity);
         }
         
@@ -59,11 +59,11 @@ public class Snapshot
         return new Snapshot(-1, playersMap);
     }
 
-    public void Apply()
+    public void Apply(Dictionary<String, GameObject> clients)
     {
         foreach (var playerEntity in playerEntities)
         { 
-            playerEntity.Value.Apply();
+            playerEntity.Value.Apply(clients[playerEntity.Key].GetComponent<Animator>());
         }
     }
 
