@@ -999,7 +999,7 @@ MonoBehaviour:
   cameraHolder: {fileID: 0}
   upLimit: -50
   downLimit: 50
-  serverIP: 192.168.0.11
+  serverIP: 192.168.0.15
   cameraPrefab: {fileID: 5321193855791418785, guid: 6f46c694170ba4841881085512aa9807,
     type: 3}
 --- !u!4 &999911073
