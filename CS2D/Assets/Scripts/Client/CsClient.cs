@@ -4,7 +4,7 @@ using UnityEngine;
 using static AnimatorStates;
 using static SendUtil;
 using static ExecuteCommand;
-
+using static MessageCsType;
 using Random = UnityEngine.Random;
 
 public class CsClient : MonoBehaviour
@@ -37,7 +37,7 @@ public class CsClient : MonoBehaviour
     public GameObject cameraPrefab;
     private bool shooting;
     private bool crouch;
-
+    private int life = 100;
 
     private Animator animator;
     // Start is called before the first frame update
@@ -76,7 +76,7 @@ public class CsClient : MonoBehaviour
         
         //mainCamera = main;
         var packet4 = Packet.Obtain();
-        packet4.buffer.PutEnum(MessageCsType.messagetype.newPlayer, 5);
+        packet4.buffer.PutEnum(messagetype.newPlayer, quantityOfMessages);
         packet4.buffer.PutString(id);
         var player = new PlayerEntity(client, id);
         player.Serialize(packet4.buffer);
@@ -142,16 +142,19 @@ public class CsClient : MonoBehaviour
         Packet packet;
         while ((packet = channel.GetPacket()) != null)
         {
-            switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
+            switch (packet.buffer.GetEnum<messagetype>(5))
             {
-                case MessageCsType.messagetype.ackInput:
+                case messagetype.ackInput:
                     UpdateInterpolationBuffer(packet);
                     break;
-                case MessageCsType.messagetype.ackJoin:
+                case messagetype.ackJoin:
                     AwaitJoinGame(packet);
                     break;
-                case MessageCsType.messagetype.updateWorld:
+                case messagetype.updateWorld:
                     UpdateWord(packet);
+                    break;
+                case messagetype.sendDamage:
+                    ReceiveDamage(packet);
                     break;
                 default:
                     break;
@@ -165,7 +168,7 @@ public class CsClient : MonoBehaviour
         if (commandServer.Count != 0)
         {
             var packet2 = Packet.Obtain();
-            packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
+            packet2.buffer.PutEnum(messagetype.input, quantityOfMessages);
             packet2.buffer.PutString(client.name);
             packet2.buffer.PutUInt(commandServer.Count);
             foreach (var currentCommand in commandServer)
@@ -189,6 +192,7 @@ public class CsClient : MonoBehaviour
         {
             var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
             enemyClient.name =  packet.buffer.GetString();
+            enemyClient.tag = "Enemy";
             enemyClient.GetComponent<PlayerId>().Id = enemyClient.name;
             //enemyClient.GetComponent<MeshRenderer>().material = material;
             clients.Add(enemyClient.name, enemyClient);  
@@ -221,7 +225,6 @@ public class CsClient : MonoBehaviour
         var buffer = packet.buffer;
         var snapshot = new Snapshot(-1);
         snapshot.Deserialize(buffer);
-        
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
@@ -288,6 +291,10 @@ public class CsClient : MonoBehaviour
 
         Execute(command, client, characterController);
         LocalCameraRotate();
+        if (IsShooting(command))
+        {
+            Shoot();
+        }
     }
 
 
@@ -314,6 +321,34 @@ public class CsClient : MonoBehaviour
         currentRotation.x = Mathf.Clamp(currentRotation.x, upLimit, downLimit);
         cameraHolder.localRotation = Quaternion.Euler(currentRotation);
     }
+    private void Shoot()
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit hit;
+
+        if (Physics.Raycast(ray, out hit))
+        {
+            Debug.Log(hit.transform.gameObject.tag);
+            if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0){
+                var packet4 = Packet.Obtain();
+                var damage = new Shoot(hit.transform.gameObject.name, 100);
+                packet4.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);
+                damage.Serialize(packet4.buffer);
+                packet4.buffer.Flush();
+                Send(serverIP, serverPort, channel, packet4);
+            }
+        }
+    }
     
+    private void ReceiveDamage(Packet packet)
+    {
+        var damage = new Shoot();
+        damage.Deserialize(packet.buffer);
+        life -= damage.Damage;
+        if (life <= 0)
+        {
+            animator.SetBool("isDead", true);
+        }
+    }
 
 }

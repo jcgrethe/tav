@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using UnityEngine;
+using static MessageCsType;
 using static SendUtil;
 using Random = UnityEngine.Random;
 
@@ -26,7 +27,7 @@ public class CsServer : MonoBehaviour
 
     private int clientPort = 9001;
     private int packetNumber = 0;
-
+    private Dictionary<String, int> playersLife;
     public List<GameObject> spots;
     
     public void Awake()
@@ -37,7 +38,7 @@ public class CsServer : MonoBehaviour
         playerIps = new Dictionary<string, string>();
         lastSnapshot = new Dictionary<string, int>();
         lastCommandObject = new Dictionary<string, Command>();
-
+        playersLife = new Dictionary<string, int>();
     }
 
     public void Update()
@@ -46,13 +47,16 @@ public class CsServer : MonoBehaviour
         while ((packet = channel.GetPacket()) != null)
         {
 
-            switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
+            switch (packet.buffer.GetEnum<messagetype>(5))
             {
-                case MessageCsType.messagetype.newPlayer:
+                case messagetype.newPlayer:
                     NewPlayer(packet);
                     break;
-                case MessageCsType.messagetype.input:
+                case messagetype.input:
                     ReceiveInput(packet);
+                    break;
+                case messagetype.sendDamage:
+                    ReceiveDamage(packet);
                     break;
                 default:
                     break;
@@ -66,7 +70,7 @@ public class CsServer : MonoBehaviour
     public void FixedUpdate()
     {
         accum += Time.deltaTime;
-        UpdateClientWord();
+        UpdateClientWorld();
 
     }
 
@@ -84,12 +88,12 @@ public class CsServer : MonoBehaviour
         playerServer.Add(client.name, client);
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
-
+        playersLife[client.name] = 100;
         //send new player to all clients
         foreach (var kv in playerIps)
         {
             var auxPacket = Packet.Obtain();
-            auxPacket.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
+            auxPacket.buffer.PutEnum(messagetype.ackJoin, quantityOfMessages);
             auxPacket.buffer.PutBits(1, 0, 50);
             auxPacket.buffer.PutString(client.name);
             auxPacket.buffer.Flush();
@@ -101,7 +105,7 @@ public class CsServer : MonoBehaviour
         
         //send ack and current players
         var packetToSend = Packet.Obtain();
-        packetToSend.buffer.PutEnum(MessageCsType.messagetype.ackJoin, 5);
+        packetToSend.buffer.PutEnum(messagetype.ackJoin, quantityOfMessages);
         packetToSend.buffer.PutBits(playerServer.Count - 1, 0, 50);
         foreach (var kv in playerServer)
         {
@@ -134,7 +138,7 @@ public class CsServer : MonoBehaviour
         return spots[Random.Range(0, 5)].transform.position;
     }
 
-    private void UpdateClientWord()
+    private void UpdateClientWorld()
     {
         var snapshot = new Snapshot();
         //generate word
@@ -142,7 +146,8 @@ public class CsServer : MonoBehaviour
         {
             var auxCommand = 
                 lastCommandObject.ContainsKey(auxPlayerEntity.Key) ? lastCommandObject[auxPlayerEntity.Key] : new Command();
-            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxCommand, auxPlayerEntity.Value.GetComponent<PlayerId>().Id);
+            var playerEntity = new PlayerEntity(auxPlayerEntity.Value, auxCommand,
+                auxPlayerEntity.Value.GetComponent<PlayerId>().Id, playersLife[auxPlayerEntity.Key]);
             snapshot.Add(playerEntity);
             
         }
@@ -153,7 +158,7 @@ public class CsServer : MonoBehaviour
             lastSnapshot[auxPlayerId]++;
             //serialize
             var updatePacket = Packet.Obtain();
-            updatePacket.buffer.PutEnum(MessageCsType.messagetype.updateWorld, 5);
+            updatePacket.buffer.PutEnum(messagetype.updateWorld, quantityOfMessages);
             snapshot.Serialize(updatePacket.buffer);
             updatePacket.buffer.Flush();
 
@@ -189,14 +194,30 @@ public class CsServer : MonoBehaviour
 
         //send ack
         var packet3 = Packet.Obtain();
-        packet3.buffer.PutEnum(MessageCsType.messagetype.ackInput, 5);
+        packet3.buffer.PutEnum(messagetype.ackInput, quantityOfMessages);
         packet3.buffer.PutUInt(max);
         packet3.buffer.Flush();
         string serverIP = playerIps[id];
         Send(serverIP, clientPort, channel, packet3);
         
     }
-    
+
+    private void ReceiveDamage(Packet packet)
+    {
+        var damage = new Shoot();
+        damage.Deserialize(packet.buffer);
+        playersLife[damage.Id] -= damage.Damage;
+        SendDamageToPlayer(damage);
+    }
+
+    private void SendDamageToPlayer(Shoot damage)
+    {
+        var packet3 = Packet.Obtain();
+        packet3.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);
+        damage.Serialize(packet3.buffer);
+        string serverIP = playerIps[damage.Id];
+        Send(serverIP, clientPort, channel, packet3);
+    }
 
     public GameObject createPlayer(Vector3 pos)
     {
