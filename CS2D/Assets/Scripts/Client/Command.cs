@@ -12,7 +12,8 @@ public class Command
     private bool jump;
     private bool shoot;
     private bool crouch;
-    
+    public bool hasHit = false;
+    public Shoot damage;
     public float HorizontalRotation => horizontalRotation;
 
     public float HorizontalMove => horizontalMove;
@@ -51,6 +52,11 @@ public class Command
         buffer.PutBit(jump);
         buffer.PutBit(shoot);
         buffer.PutBit(crouch);
+        buffer.PutBit(hasHit);
+        if (hasHit)
+        {
+            damage.Serialize(buffer);
+        }
     }
     
     
@@ -63,6 +69,13 @@ public class Command
         jump = buffer.GetBit();
         shoot = buffer.GetBit();
         crouch = buffer.GetBit();
+        hasHit = buffer.GetBit();
+        if (hasHit)
+        {
+            damage = new Shoot();
+            damage.Deserialize(buffer);
+            
+        }
     }
 
     public bool isSendable()

@@ -57,9 +57,9 @@ public class CsServer : MonoBehaviour
                 case messagetype.input:
                     ReceiveInput(packet);
                     break;
-                case messagetype.sendDamage:
-                    ReceiveDamage(packet);
-                    break;
+                //case messagetype.sendDamage:
+                  //  ReceiveDamage(packet);
+                   // break;
                 default:
                     break;
             }
@@ -179,6 +179,7 @@ public class CsServer : MonoBehaviour
         {
             var auxPlayerId = kv.Key;
             snapshot.packetNumber = lastSnapshot[auxPlayerId];
+            snapshot.life = playersLife[auxPlayerId];
             lastSnapshot[auxPlayerId]++;
             //serialize
             var updatePacket = Packet.Obtain();
@@ -209,6 +210,10 @@ public class CsServer : MonoBehaviour
             if (commands.commandNumber > currentLastCommand)
             {
                 ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
+                if (commands.hasHit)
+                {
+                    ReceiveDamage(commands.damage);
+                }
                 max = commands.commandNumber;
                 lastCommandObject[id] = commands;
             }
@@ -226,13 +231,11 @@ public class CsServer : MonoBehaviour
         
     }
 
-    private void ReceiveDamage(Packet packet)
+    private void ReceiveDamage(Shoot damage)
     {
-        var damage = new Shoot();
-        damage.Deserialize(packet.buffer);
         playersLife[damage.Id] -= damage.Damage;
         Debug.Log("Receive damage to: " + damage.Id);
-        SendDamageToPlayer(damage);
+        //SendDamageToPlayer(damage);
     }
 
     private void SendDamageToPlayer(Shoot damage)

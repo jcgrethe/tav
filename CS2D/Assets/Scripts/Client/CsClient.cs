@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using static AnimatorStates;
 using static SendUtil;
@@ -113,6 +114,15 @@ public class CsClient : MonoBehaviour
         }
         UpdateClient();
         InterpolateAndConciliate();
+        if (life <= 0)
+        {
+            Debug.Log("DEAD");
+            animator.SetBool("isDead", true);
+        }
+        else
+        {
+            animator.SetBool("isDead", false);
+        }
         
         if (Input.GetMouseButtonDown(0))
         {
@@ -153,11 +163,6 @@ public class CsClient : MonoBehaviour
                 case messagetype.updateWorld:
                     UpdateWord(packet);
                     break;
-                case messagetype.sendDamage:
-                    ReceiveDamage(packet);
-                    break;
-                default:
-                    break;
             }
         }
     }
@@ -182,9 +187,6 @@ public class CsClient : MonoBehaviour
         
     }
     
-    
-
-
     private void AwaitJoinGame(Packet packet)
     {
         var quan = packet.buffer.GetBits(0, 50);
@@ -225,6 +227,7 @@ public class CsClient : MonoBehaviour
         var buffer = packet.buffer;
         var snapshot = new Snapshot(-1);
         snapshot.Deserialize(buffer);
+        life = snapshot.life;
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
@@ -278,9 +281,6 @@ public class CsClient : MonoBehaviour
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"), 
             Input.GetKey(KeyCode.Space), shooting, crouch);
-        commandServer.Add(command);
-        packetNumber++;
-
         animator.SetBool("isJumping", isJumping(characterController));
         animator.SetBool("shooting", IsShooting(command));
         animator.SetBool("crouch", IsCrouch(command));
@@ -293,8 +293,10 @@ public class CsClient : MonoBehaviour
         LocalCameraRotate();
         if (IsShooting(command))
         {
-            Shoot();
+            Shoot(command);
         }
+        commandServer.Add(command);
+        packetNumber++;
     }
 
 
@@ -321,41 +323,23 @@ public class CsClient : MonoBehaviour
         currentRotation.x = Mathf.Clamp(currentRotation.x, upLimit, downLimit);
         cameraHolder.localRotation = Quaternion.Euler(currentRotation);
     }
-    private void Shoot()
+    private void Shoot(Command command)
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit[] allhHit = Physics.RaycastAll(ray);
+        RaycastHit[] allhHit = Physics.RaycastAll(ray).OrderBy(h=>h.distance).ToArray();
         foreach (var hit in allhHit)
         {
-            Debug.Log(hit.transform.tag);
             Debug.Log(hit.transform.name);
-            if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0){
-                Debug.Log("SENDING SHOOT");
-                var packet4 = Packet.Obtain();
-                var damage = new Shoot(hit.transform.gameObject.name, 100);
-                packet4.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);
-                damage.Serialize(packet4.buffer);
-                packet4.buffer.Flush();
-                Send(serverIP, serverPort, channel, packet4);
+            if (string.Compare(hit.transform.gameObject.tag, "Wall", StringComparison.Ordinal) == 0)
+            {
+                return;
+            }
+            if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0)
+            {
+                command.hasHit = true;
+                command.damage = new Shoot(hit.transform.gameObject.name, 100);
             }
         }
         
     }
-
-    private void ReceiveDamage(Packet packet)
-    {
-        var damage = new Shoot();
-        damage.Deserialize(packet.buffer);
-        if (life > 0){
-            life -= damage.Damage;
-            if (life <= 0)
-            {
-                Debug.Log("DEAD");
-                animator.SetBool("isDead", true);
-                life = 100;
-            }
-        }
-        Debug.Log("Receive damage from: " + damage.Id);
-    }
-
 }

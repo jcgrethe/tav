@@ -7,7 +7,7 @@ public class Snapshot
 {
     public Dictionary<String, PlayerEntity> playerEntities;
     public int packetNumber;
-
+    public int life = 100;
     public Snapshot(int packetNumber)
     {
         this.packetNumber = packetNumber;
@@ -33,6 +33,7 @@ public class Snapshot
     public void Serialize(BitBuffer buffer)
     {
         buffer.PutUInt(packetNumber);
+        buffer.PutBits(life, 0 , 100);
         buffer.PutBits(playerEntities.Count, 0, 50);
         foreach (var playerEntity in playerEntities)
         {
@@ -43,6 +44,7 @@ public class Snapshot
     public void Deserialize(BitBuffer buffer)
     {
         packetNumber = buffer.GetUInt();
+        life = buffer.GetBits(0, 100);
         var quatity = buffer.GetBits(0, 50);
         for (int i = 0; i < quatity; i++)
         {
