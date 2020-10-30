@@ -24,6 +24,7 @@ public class CsServer : MonoBehaviour
     private Dictionary<String, int> lastSnapshot;
     private Dictionary<String, Command> lastCommandObject;
     private int pos = 648;
+    private Dictionary<String, float> timeToRespawn;
 
     private int clientPort = 9001;
     private int packetNumber = 0;
@@ -39,6 +40,7 @@ public class CsServer : MonoBehaviour
         lastSnapshot = new Dictionary<string, int>();
         lastCommandObject = new Dictionary<string, Command>();
         playersLife = new Dictionary<string, int>();
+        timeToRespawn = new Dictionary<string, float>();
     }
 
     public void Update()
@@ -61,6 +63,27 @@ public class CsServer : MonoBehaviour
                 default:
                     break;
             }
+        }
+
+        List<String> playersToRespawn = new List<string>();
+
+        foreach (var player in playersLife)
+        {
+            if (player.Value <= 0)
+            {
+                timeToRespawn[player.Key] += Time.deltaTime;
+                if (timeToRespawn[player.Key] > 5)
+                {
+                    playerServer[player.Key].transform.position = GetRandomSpot();
+                    playersToRespawn.Add(player.Key);
+                    timeToRespawn[player.Key] = 0;
+                }
+            }
+        }
+
+        foreach (var id in playersToRespawn)
+        {
+            playersLife[id] = 100;
         }
         
         
@@ -89,6 +112,7 @@ public class CsServer : MonoBehaviour
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
         playersLife[client.name] = 100;
+        timeToRespawn[client.name] = 0;
         //send new player to all clients
         foreach (var kv in playerIps)
         {

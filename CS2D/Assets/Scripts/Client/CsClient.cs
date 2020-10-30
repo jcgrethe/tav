@@ -352,6 +352,7 @@ public class CsClient : MonoBehaviour
             {
                 Debug.Log("DEAD");
                 animator.SetBool("isDead", true);
+                life = 100;
             }
         }
         Debug.Log("Receive damage from: " + damage.Id);
