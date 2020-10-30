@@ -142,7 +142,7 @@ public class CsClient : MonoBehaviour
         Packet packet;
         while ((packet = channel.GetPacket()) != null)
         {
-            switch (packet.buffer.GetEnum<messagetype>(5))
+            switch (packet.buffer.GetEnum<messagetype>(quantityOfMessages))
             {
                 case messagetype.ackInput:
                     UpdateInterpolationBuffer(packet);
@@ -331,6 +331,7 @@ public class CsClient : MonoBehaviour
             Debug.Log(hit.transform.tag);
             Debug.Log(hit.transform.name);
             if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0){
+                Debug.Log("SENDING SHOOT");
                 var packet4 = Packet.Obtain();
                 var damage = new Shoot(hit.transform.gameObject.name, 100);
                 packet4.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);

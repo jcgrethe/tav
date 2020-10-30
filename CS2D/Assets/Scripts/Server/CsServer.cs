@@ -47,7 +47,7 @@ public class CsServer : MonoBehaviour
         while ((packet = channel.GetPacket()) != null)
         {
 
-            switch (packet.buffer.GetEnum<messagetype>(5))
+            switch (packet.buffer.GetEnum<messagetype>(quantityOfMessages))
             {
                 case messagetype.newPlayer:
                     NewPlayer(packet);
