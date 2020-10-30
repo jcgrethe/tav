@@ -324,9 +324,8 @@ public class CsClient : MonoBehaviour
     private void Shoot()
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-        RaycastHit hit;
-
-        if (Physics.Raycast(ray, out hit))
+        RaycastHit[] allhHit = Physics.RaycastAll(ray);
+        foreach (var hit in allhHit)
         {
             Debug.Log(hit.transform.tag);
             Debug.Log(hit.transform.name);
@@ -340,6 +339,7 @@ public class CsClient : MonoBehaviour
                 Send(serverIP, serverPort, channel, packet4);
             }
         }
+        
     }
 
     private void ReceiveDamage(Packet packet)
