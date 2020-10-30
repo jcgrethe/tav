@@ -33,7 +33,7 @@ public class Snapshot
     public void Serialize(BitBuffer buffer)
     {
         buffer.PutUInt(packetNumber);
-        buffer.PutBits(life, 0 , 100);
+        buffer.PutBits(life<0?0:life, 0 , 100);
         buffer.PutBits(playerEntities.Count, 0, 50);
         foreach (var playerEntity in playerEntities)
         {

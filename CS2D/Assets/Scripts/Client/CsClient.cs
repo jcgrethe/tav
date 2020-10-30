@@ -39,7 +39,7 @@ public class CsClient : MonoBehaviour
     private bool shooting;
     private bool crouch;
     private int life = 100;
-
+    private bool isDead = false;
     private Animator animator;
     // Start is called before the first frame update
     void Start() {
@@ -114,16 +114,13 @@ public class CsClient : MonoBehaviour
         }
         UpdateClient();
         InterpolateAndConciliate();
-        if (life <= 0)
+        if (life <= 0  && !isDead)
         {
             Debug.Log("DEAD");
             animator.SetBool("isDead", true);
+            isDead = true;
         }
-        else
-        {
-            animator.SetBool("isDead", false);
-        }
-        
+
         if (Input.GetMouseButtonDown(0))
         {
             shooting = true;
@@ -144,7 +141,10 @@ public class CsClient : MonoBehaviour
 
     public void FixedUpdate()
     {
-        SendInput();
+        if (!isDead)
+        {
+            SendInput();
+        }
     }
 
     private void UpdateClient() 
@@ -227,7 +227,9 @@ public class CsClient : MonoBehaviour
         var buffer = packet.buffer;
         var snapshot = new Snapshot(-1);
         snapshot.Deserialize(buffer);
+        if(snapshot.life != 0  && isDead) isDead = false; 
         life = snapshot.life;
+        Debug.Log(snapshot.life);
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
