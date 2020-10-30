@@ -341,18 +341,20 @@ public class CsClient : MonoBehaviour
             }
         }
     }
-    
+
     private void ReceiveDamage(Packet packet)
     {
         var damage = new Shoot();
         damage.Deserialize(packet.buffer);
-        life -= damage.Damage;
-        if (life <= 0)
-        {
-            animator.SetBool("isDead", true);
+        if (life > 0){
+            life -= damage.Damage;
+            if (life <= 0)
+            {
+                Debug.Log("DEAD");
+                animator.SetBool("isDead", true);
+            }
         }
         Debug.Log("Receive damage from: " + damage.Id);
-
     }
 
 }

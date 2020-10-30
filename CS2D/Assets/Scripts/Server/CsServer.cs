@@ -217,6 +217,7 @@ public class CsServer : MonoBehaviour
         packet3.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);
         damage.Serialize(packet3.buffer);
         string serverIP = playerIps[damage.Id];
+        packet3.buffer.Flush();
         Send(serverIP, clientPort, channel, packet3);
     }
 
