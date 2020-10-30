@@ -235,19 +235,7 @@ public class CsServer : MonoBehaviour
     {
         playersLife[damage.Id] -= damage.Damage;
         Debug.Log("Receive damage to: " + damage.Id);
-        //SendDamageToPlayer(damage);
     }
-
-    private void SendDamageToPlayer(Shoot damage)
-    {
-        var packet3 = Packet.Obtain();
-        packet3.buffer.PutEnum(messagetype.sendDamage, quantityOfMessages);
-        damage.Serialize(packet3.buffer);
-        string serverIP = playerIps[damage.Id];
-        packet3.buffer.Flush();
-        Send(serverIP, clientPort, channel, packet3);
-    }
-
     public GameObject createPlayer(Vector3 pos)
     {
         return Instantiate(ServerPrefab, pos, Quaternion.identity);
