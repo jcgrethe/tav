@@ -207,6 +207,7 @@ public class CsServer : MonoBehaviour
         var damage = new Shoot();
         damage.Deserialize(packet.buffer);
         playersLife[damage.Id] -= damage.Damage;
+        Debug.Log("Receive damage to: " + damage.Id);
         SendDamageToPlayer(damage);
     }
 

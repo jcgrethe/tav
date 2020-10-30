@@ -328,7 +328,8 @@ public class CsClient : MonoBehaviour
 
         if (Physics.Raycast(ray, out hit))
         {
-            Debug.Log(hit.transform.gameObject.tag);
+            Debug.Log(hit.transform.tag);
+            Debug.Log(hit.transform.name);
             if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0){
                 var packet4 = Packet.Obtain();
                 var damage = new Shoot(hit.transform.gameObject.name, 100);
@@ -349,6 +350,8 @@ public class CsClient : MonoBehaviour
         {
             animator.SetBool("isDead", true);
         }
+        Debug.Log("Receive damage from: " + damage.Id);
+
     }
 
 }
