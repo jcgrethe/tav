@@ -568,7 +568,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxPlayers: 6
-  pps: 50
+  pps: 30
   ServerPrefab: {fileID: 7648503600546279044, guid: a9c57631593be4fc191ab9a45e5067db,
     type: 3}
   spots:
@@ -704,7 +704,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 982debb929dfa4e818c5cba0c83c6031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  pps: 50
+  pps: 30
   requiredSnapshots: 8
   ClientPrefab: {fileID: 5953766332545911426, guid: 79ed0664a4db4480d8685ab84457f1f6,
     type: 3}
@@ -712,7 +712,7 @@ MonoBehaviour:
   cameraHolder: {fileID: 0}
   upLimit: -50
   downLimit: 50
-  serverIP: 192.168.0.11
+  serverIP: 127.0.0.1
   cameraPrefab: {fileID: 5321193855791418785, guid: 6f46c694170ba4841881085512aa9807,
     type: 3}
 --- !u!4 &803758058

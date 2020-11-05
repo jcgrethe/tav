@@ -41,6 +41,7 @@ public class CsClient : MonoBehaviour
     private int life = 100;
     private bool isDead = false;
     private Animator animator;
+    private bool startInterp = false;
     // Start is called before the first frame update
     void Start() {
         JoinPlayer();
@@ -72,7 +73,7 @@ public class CsClient : MonoBehaviour
         
         GameObject main = Instantiate(cameraPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         main.transform.parent = client.transform;
-        main.transform.localPosition = new Vector3(-0.14f, 2.29f, -6.02f);
+        main.transform.localPosition = new Vector3(1.077f, 1.481f, -2.427f);
         cameraHolder = main.GetComponent<Camera>().transform;
         
         //mainCamera = main;
@@ -99,8 +100,12 @@ public class CsClient : MonoBehaviour
 
     void Update() 
     {
-        clientTime += Time.deltaTime;
+        //Debug.Log("SIZE: " + interpolationBuffer.Count);
         //remove old commands
+        //if (startInterp)
+        //{
+        //    clientTime += Time.deltaTime;
+        //}
         while(commandServer.Count != 0)
         {
             if (commandServer[0].timestamp < Time.time)
@@ -169,6 +174,7 @@ public class CsClient : MonoBehaviour
 
     private void SendInput()
     {
+        if(!join) return;
         ReadInput();
         if (commandServer.Count != 0)
         {
@@ -229,37 +235,57 @@ public class CsClient : MonoBehaviour
         snapshot.Deserialize(buffer);
         if(snapshot.life != 0  && isDead) isDead = false; 
         life = snapshot.life;
-        Debug.Log(snapshot.life);
+        //Debug.Log(snapshot.life);
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
+            startInterp = true;
         }
     }
 
     private void InterpolateAndConciliate()
     {
-        while (interpolationBuffer.Count >= requiredSnapshots) {
-            Interpolate();
-            Conciliate();
+        if(interpolationBuffer.Count >= requiredSnapshots) clientTime += Time.deltaTime;
+        Conciliate();
+        while ( Interpolate())
+        {
         }
+
+
+        
+
     }
     
-    private void Interpolate() 
+    private bool Interpolate() 
     {
-        if (!join) return;
-        var previousTime = (interpolationBuffer[0]).packetNumber * (1f/pps);
-        var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
+        if (!join) return false;
+        if (interpolationBuffer.Count < requiredSnapshots) return false;
+        var previousTime = ((interpolationBuffer[0]).packetNumber) * (1f/(pps));
+        var nextTime =  (interpolationBuffer[1].packetNumber) * (1f/(pps));
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
         var interpolatedSnapshot = Snapshot.CreateInterpolated(interpolationBuffer[0], interpolationBuffer[1], t, clients, client.name);
         interpolatedSnapshot.Apply();
+        
+        //Debug.Log("PREV TIME" + previousTime);
+        //Debug.Log("CLIENT TIME" + clientTime);
+        //Debug.Log("NEXt TIME" + nextTime);
 
         if (clientTime > nextTime) {
             interpolationBuffer.RemoveAt(0);
+            return true;
         }
+        else
+        {
+            //Debug.Log("INTERP");
+            //Debug.Log("BUFFER" + interpolationBuffer.Count);
+        }
+
+        return false;
     }
 
     private void Conciliate()
     {
+        if(interpolationBuffer.Count < 1) return;
         var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
@@ -274,15 +300,15 @@ public class CsClient : MonoBehaviour
         var clientPos = new Vector3( svPos.x, yPos, svPos.z);
 
         client.transform.position = clientPos;
-        client.transform.rotation = conciliateGameObject.transform.rotation;
     }
 
     private void ReadInput()
     {
         var timeout = Time.time + 2;
+        Rotate(client, Input.GetAxis("Mouse X"));
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"), 
-            Input.GetKey(KeyCode.Space), shooting, crouch);
+            Input.GetAxis("Vertical"), timeout, 
+            Input.GetKey(KeyCode.Space), shooting, crouch, client.transform.rotation );
         animator.SetBool("isJumping", isJumping(characterController));
         animator.SetBool("shooting", IsShooting(command));
         animator.SetBool("crouch", IsCrouch(command));
@@ -299,6 +325,7 @@ public class CsClient : MonoBehaviour
         }
         commandServer.Add(command);
         packetNumber++;
+        //Debug.Log("CLIENT" + packetNumber );
     }
 
 

@@ -209,7 +209,9 @@ public class CsServer : MonoBehaviour
             commands.Deserialize(packet.buffer);
             if (commands.commandNumber > currentLastCommand)
             {
+                //Debug.Log("SERVER" + commands.commandNumber );
                 ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
+                player.transform.rotation = commands.quaternion;
                 if (commands.hasHit)
                 {
                     ReceiveDamage(commands.damage);

@@ -4,7 +4,7 @@ using static AnimatorStates;
 public class ExecuteCommand
 {
 
-    private static float mouseSensitivity = 6;
+    private static float mouseSensitivity = 12;
     // gravity
 
     public static void Execute(Command command, GameObject client, CharacterController characterController)
@@ -12,7 +12,7 @@ public class ExecuteCommand
         float gravity = 18000f;
         float jumpSpeed = 3000;
         float verticalSpeed = 0;
-        float speed = 300;
+        float speed = 500;
 
         float horizontalMove = command.HorizontalMove;
         float verticalMove = command.VerticalMove;
@@ -32,11 +32,11 @@ public class ExecuteCommand
         Vector3 gravityMove = new Vector3(0, verticalSpeed, 0);
         Vector3 move = client.transform.forward * verticalMove + client.transform.right * horizontalMove;
         characterController.Move(speed * Time.deltaTime * move + gravityMove * Time.deltaTime);
-        Rotate(client, command);
+        //Rotate(client, command);
     }
     
-    private static void Rotate(GameObject client, Command command)
+    public static void Rotate(GameObject client, float horizontalRotation)
     {
-        client.transform.Rotate(0, command.HorizontalRotation * mouseSensitivity, 0);
+        client.transform.Rotate(0, horizontalRotation * mouseSensitivity, 0);
     }
 }

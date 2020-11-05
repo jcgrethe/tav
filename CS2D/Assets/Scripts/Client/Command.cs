@@ -8,13 +8,12 @@ public class Command
     private float horizontalMove;
     private float verticalMove;
     public float timestamp;
-    private float horizontalRotation;
     private bool jump;
     private bool shoot;
     private bool crouch;
     public bool hasHit = false;
     public Shoot damage;
-    public float HorizontalRotation => horizontalRotation;
+    public Quaternion quaternion;
 
     public float HorizontalMove => horizontalMove;
 
@@ -24,23 +23,23 @@ public class Command
     public bool Shoot => shoot;
 
     public bool Crouch => crouch;
-
+    
     
     public Command()
     {
     }
 
-    public Command(int commandNumber, float horizontalMove, float verticalMove, float timestamp,
-        float horizontalRotation, bool jump, bool shoot, bool crouch)
+    public Command(int commandNumber, float horizontalMove, float verticalMove, float timestamp
+        , bool jump, bool shoot, bool crouch, Quaternion quaternion)
     {
         this.commandNumber = commandNumber;
         this.horizontalMove = horizontalMove;
         this.verticalMove = verticalMove;
         this.timestamp = timestamp;
-        this.horizontalRotation = horizontalRotation;
         this.jump = jump;
         this.shoot = shoot;
         this.crouch = crouch;
+        this.quaternion = quaternion;
     }
 
     public void Serialize(BitBuffer buffer)
@@ -48,7 +47,6 @@ public class Command
         buffer.PutUInt(commandNumber);
         buffer.PutFloat(horizontalMove);
         buffer.PutFloat(verticalMove);
-        buffer.PutFloat(horizontalRotation);
         buffer.PutBit(jump);
         buffer.PutBit(shoot);
         buffer.PutBit(crouch);
@@ -57,6 +55,11 @@ public class Command
         {
             damage.Serialize(buffer);
         }
+        buffer.PutFloat(quaternion.x);
+        buffer.PutFloat(quaternion.y);
+        buffer.PutFloat(quaternion.z);
+        buffer.PutFloat(quaternion.w);
+
     }
     
     
@@ -65,7 +68,6 @@ public class Command
         commandNumber = buffer.GetUInt();
         horizontalMove = buffer.GetFloat();
         verticalMove = buffer.GetFloat();
-        horizontalRotation = buffer.GetFloat();
         jump = buffer.GetBit();
         shoot = buffer.GetBit();
         crouch = buffer.GetBit();
@@ -76,6 +78,8 @@ public class Command
             damage.Deserialize(buffer);
             
         }
+        quaternion = new Quaternion(buffer.GetFloat(),buffer.GetFloat(),buffer.GetFloat(),buffer.GetFloat());
+
     }
 
     public bool isSendable()
