@@ -349,8 +349,6 @@ public class CsClient : MonoBehaviour
             Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation );
         if (!onReloadingCoolDown)
         {
-            Debug.Log("SHOTING" + shooting);
-            Debug.Log("CROUCH" + crouch);
             animator.SetBool("isJumping", isJumping(characterController));
             animator.SetBool("shooting", shooting);
             animator.SetBool("crouch", IsCrouch(command));
@@ -430,9 +428,9 @@ public class CsClient : MonoBehaviour
             }
             if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0)
             {
-                Debug.Log(hit.transform.tag);
+                var damage = Vector3.Distance(hit.transform.position,hit.point) / 2;
                 command.hasHit = true;
-                //command.damage = new Shoot(hit.transform.gameObject.name, 100);
+                command.damage = new Shoot(hit.transform.gameObject.name, (int) damage);
             }
         }
         
