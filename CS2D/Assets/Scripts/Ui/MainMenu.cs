@@ -28,4 +28,8 @@ public class MainMenu : MonoBehaviour
         gameManager.ip = inputField.GetComponent<TMP_InputField>().text;
         SceneManager.LoadScene("Scene/Client");
     }
-}
+    
+    public void StartServerOnly()
+    {
+        SceneManager.LoadScene("Scene/OnlyServer");
+    }}

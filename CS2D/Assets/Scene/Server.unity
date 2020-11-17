@@ -378,7 +378,7 @@ GameObject:
   - component: {fileID: 284317577}
   - component: {fileID: 284317576}
   m_Layer: 5
-  m_Name: Kills
+  m_Name: KillsText
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -683,6 +683,7 @@ MonoBehaviour:
   canvas: {fileID: 443875364}
   ammoText: {fileID: 1418345137}
   lifeText: {fileID: 736560355}
+  killsText: {fileID: 510808718}
 --- !u!114 &443875362
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -800,7 +801,7 @@ GameObject:
   - component: {fileID: 510808719}
   - component: {fileID: 510808718}
   m_Layer: 5
-  m_Name: Life
+  m_Name: Kills
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
