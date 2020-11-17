@@ -59,7 +59,7 @@ public class CsClient : MonoBehaviour
     void Start()
     {
         var gameManagerObject = GameObject.FindGameObjectWithTag("GameManager");
-        if (gameManager != null)
+        if (gameManagerObject != null)
         {
             gameManager = gameManagerObject.GetComponent<GameManager>();
             serverIP = gameManager.ip;
