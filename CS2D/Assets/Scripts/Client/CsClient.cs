@@ -54,6 +54,8 @@ public class CsClient : MonoBehaviour
     private int bullets = 30;
     private GameManager gameManager;
     public InGameUi inGameUi;
+    private bool sendEmptyCommand = true;
+    
     
     // Start is called before the first frame update
     void Start()
@@ -371,6 +373,13 @@ public class CsClient : MonoBehaviour
         {
             commandServer.Add(command);
             packetNumber++;
+            sendEmptyCommand = true;
+        } 
+        else if(sendEmptyCommand)
+        {
+            commandServer.Add(command);
+            packetNumber++;
+            sendEmptyCommand = false;
         }
         //Debug.Log("CLIENT" + packetNumber );
     }
