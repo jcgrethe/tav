@@ -366,8 +366,12 @@ public class CsClient : MonoBehaviour
             audioSource.Play();
             Shoot(command);
         }
-        commandServer.Add(command);
-        packetNumber++;
+
+        if (command.isSendable())
+        {
+            commandServer.Add(command);
+            packetNumber++;
+        }
         //Debug.Log("CLIENT" + packetNumber );
     }
 

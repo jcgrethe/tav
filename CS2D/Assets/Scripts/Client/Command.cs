@@ -84,11 +84,11 @@ public class Command
 
     public bool isSendable()
     {
-       // if (!up && !down && !space)
-        //{
-         //   return false;
-        //}
-
+        if (horizontalMove == 0 && verticalMove == 0 && !shoot && !crouch && !hasHit && !jump)
+        {
+            return false;
+        }
+        Debug.Log("SEND");
         return true;
     }
 }
