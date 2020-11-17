@@ -12,7 +12,7 @@ public class CsClient : MonoBehaviour
 {
 
     private Channel channel;
-
+    private AudioSource audioSource;
     private float clientTime = 0f;
     public int pps = 100;
     public int requiredSnapshots = 3;
@@ -33,7 +33,7 @@ public class CsClient : MonoBehaviour
     private float mouseSensitivity = 6f;
     public float upLimit = -50;
     public float downLimit = 50;
-    public String serverIP = "192.168.1.137";
+    public String serverIP;
     private GameObject mainCamera;
     public GameObject cameraPrefab;
     private bool shooting;
@@ -42,8 +42,25 @@ public class CsClient : MonoBehaviour
     private bool isDead = false;
     private Animator animator;
     private bool startInterp = false;
+
+    public float coolDown = .3f;
+    private float shootingCoolDown = 0;
+    private bool onShootingCoolDown = false;
+    
+    public float reloadCoolDown = 2f;
+    private float accumReloadingCoolDown = 0;
+    private bool onReloadingCoolDown = false;
+    public int initialAmmo = 1;
+    private int bullets = 30;
+    private GameManager gameManager;
+
+    
     // Start is called before the first frame update
-    void Start() {
+    void Start()
+    {
+        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
+        serverIP = gameManager.ip;
+        audioSource = GetComponent<AudioSource>();
         JoinPlayer();
     }
 
@@ -100,12 +117,27 @@ public class CsClient : MonoBehaviour
 
     void Update() 
     {
-        //Debug.Log("SIZE: " + interpolationBuffer.Count);
-        //remove old commands
-        //if (startInterp)
-        //{
-        //    clientTime += Time.deltaTime;
-        //}
+        if (onShootingCoolDown)
+        {
+            shootingCoolDown += Time.deltaTime;
+            if (shootingCoolDown > coolDown)
+            {
+                onShootingCoolDown = false;
+            }
+        }
+        
+        if (onReloadingCoolDown)
+        {
+            accumReloadingCoolDown += Time.deltaTime;
+            if (accumReloadingCoolDown > reloadCoolDown)
+            {
+                bullets = initialAmmo;
+                onReloadingCoolDown = false;
+                animator.SetBool("isReloading", false);
+            }
+        }
+        
+        
         while(commandServer.Count != 0)
         {
             if (commandServer[0].timestamp < Time.time)
@@ -308,19 +340,23 @@ public class CsClient : MonoBehaviour
         Rotate(client, Input.GetAxis("Mouse X"));
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical"), timeout, 
-            Input.GetKey(KeyCode.Space), shooting, crouch, client.transform.rotation );
-        animator.SetBool("isJumping", isJumping(characterController));
-        animator.SetBool("shooting", IsShooting(command));
-        animator.SetBool("crouch", IsCrouch(command));
-        animator.SetBool("isWalking", VerticalMovePos(command));
-        animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
-        animator.SetBool("isWalkingRight", HorizontalMovePos(command));
-        animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
+            Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation );
+        if (!onReloadingCoolDown)
+        {
+            animator.SetBool("isJumping", isJumping(characterController));
+            animator.SetBool("shooting", shooting);
+            animator.SetBool("crouch", IsCrouch(command));
+            animator.SetBool("isWalking", VerticalMovePos(command));
+            animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
+            animator.SetBool("isWalkingRight", HorizontalMovePos(command));
+            animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
+        }
 
         Execute(command, client, characterController);
         LocalCameraRotate();
         if (IsShooting(command))
         {
+            audioSource.Play();
             Shoot(command);
         }
         commandServer.Add(command);
@@ -328,6 +364,27 @@ public class CsClient : MonoBehaviour
         //Debug.Log("CLIENT" + packetNumber );
     }
 
+    private bool canShoot(bool shooting)
+    {
+        if (shooting && !onShootingCoolDown && !onReloadingCoolDown)
+        {
+            shootingCoolDown = 0;
+            onShootingCoolDown = true;
+            bullets--;
+            Debug.Log(bullets);
+            if (bullets == 0)
+            {
+                animator.SetBool("isReloading", true);
+                animator.SetBool("shooting", false);
+                onReloadingCoolDown = true;
+                accumReloadingCoolDown = 0;
+            }
+            return true;
+        }
+
+        return false;
+
+    }
 
 
 
