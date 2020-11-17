@@ -19,6 +19,7 @@ public class CsServer : MonoBehaviour
     private Dictionary<String, GameObject> playerServer;
     private Dictionary<String, int> lastCommand;
     private Dictionary<String, String> playerIps;
+    private Dictionary<String, int> kills;
     private float accum3;
     public GameObject ServerPrefab;
     private Dictionary<String, int> lastSnapshot;
@@ -41,6 +42,7 @@ public class CsServer : MonoBehaviour
         lastCommandObject = new Dictionary<string, Command>();
         playersLife = new Dictionary<string, int>();
         timeToRespawn = new Dictionary<string, float>();
+        kills = new Dictionary<string, int>();
     }
 
     public void Update()
@@ -113,6 +115,7 @@ public class CsServer : MonoBehaviour
         lastSnapshot[client.name] = 0;
         playersLife[client.name] = 100;
         timeToRespawn[client.name] = 0;
+        kills[client.name] = 0;
         //send new player to all clients
         foreach (var kv in playerIps)
         {
@@ -180,6 +183,7 @@ public class CsServer : MonoBehaviour
             var auxPlayerId = kv.Key;
             snapshot.packetNumber = lastSnapshot[auxPlayerId];
             snapshot.life = playersLife[auxPlayerId];
+            snapshot.kills = kills[auxPlayerId];
             lastSnapshot[auxPlayerId]++;
             //serialize
             var updatePacket = Packet.Obtain();
@@ -214,7 +218,7 @@ public class CsServer : MonoBehaviour
                 player.transform.rotation = commands.quaternion;
                 if (commands.hasHit)
                 {
-                    ReceiveDamage(commands.damage);
+                    ReceiveDamage(commands.damage, id);
                 }
                 max = commands.commandNumber;
                 lastCommandObject[id] = commands;
@@ -233,9 +237,13 @@ public class CsServer : MonoBehaviour
         
     }
 
-    private void ReceiveDamage(Shoot damage)
+    private void ReceiveDamage(Shoot damage, String id)
     {
         playersLife[damage.Id] -= damage.Damage;
+        if (playersLife[damage.Id] <= 0)
+        {
+            kills[id] = kills[id] + 1;
+        }
         Debug.Log("Receive damage to: " + damage.Id);
     }
     public GameObject createPlayer(Vector3 pos)

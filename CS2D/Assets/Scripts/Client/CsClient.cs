@@ -273,6 +273,7 @@ public class CsClient : MonoBehaviour
         if(snapshot.life != 0  && isDead) isDead = false; 
         life = snapshot.life;
         inGameUi.setLife(life.ToString());
+        inGameUi.setKills(snapshot.kills.ToString());
         //Debug.Log(snapshot.life);
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {

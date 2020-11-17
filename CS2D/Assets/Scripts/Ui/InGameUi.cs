@@ -10,6 +10,7 @@ public class InGameUi : MonoBehaviour
     public Canvas canvas;
     public TMP_Text ammoText;
     public TMP_Text lifeText;
+    public TMP_Text killsText;
 
     public void setCamera(Camera camera)
     {
@@ -27,6 +28,10 @@ public class InGameUi : MonoBehaviour
         lifeText.SetText(life);
     }
     
+    public void setKills(String kills)
+    {
+        killsText.SetText(kills);
+    }
 
 
 }
