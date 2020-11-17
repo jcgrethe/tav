@@ -8,6 +8,9 @@ TagManager:
   - Enemy
   - Wall
   - GameManager
+  - Leg
+  - Shoulder
+  - Head
   layers:
   - Default
   - TransparentFX

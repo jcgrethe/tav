@@ -53,13 +53,17 @@ public class CsClient : MonoBehaviour
     public int initialAmmo = 1;
     private int bullets = 30;
     private GameManager gameManager;
-
+    public InGameUi inGameUi;
     
     // Start is called before the first frame update
     void Start()
     {
-        gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
-        serverIP = gameManager.ip;
+        var gameManagerObject = GameObject.FindGameObjectWithTag("GameManager");
+        if (gameManager != null)
+        {
+            gameManager = gameManagerObject.GetComponent<GameManager>();
+            serverIP = gameManager.ip;
+        }
         audioSource = GetComponent<AudioSource>();
         JoinPlayer();
     }
@@ -92,7 +96,7 @@ public class CsClient : MonoBehaviour
         main.transform.parent = client.transform;
         main.transform.localPosition = new Vector3(1.077f, 1.481f, -2.427f);
         cameraHolder = main.GetComponent<Camera>().transform;
-        
+        inGameUi.setCamera(cameraHolder.GetComponent<Camera>());
         //mainCamera = main;
         var packet4 = Packet.Obtain();
         packet4.buffer.PutEnum(messagetype.newPlayer, quantityOfMessages);
@@ -132,6 +136,7 @@ public class CsClient : MonoBehaviour
             if (accumReloadingCoolDown > reloadCoolDown)
             {
                 bullets = initialAmmo;
+                inGameUi.setAmmo(bullets.ToString());
                 onReloadingCoolDown = false;
                 animator.SetBool("isReloading", false);
             }
@@ -267,6 +272,7 @@ public class CsClient : MonoBehaviour
         snapshot.Deserialize(buffer);
         if(snapshot.life != 0  && isDead) isDead = false; 
         life = snapshot.life;
+        inGameUi.setLife(life.ToString());
         //Debug.Log(snapshot.life);
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
@@ -343,6 +349,8 @@ public class CsClient : MonoBehaviour
             Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation );
         if (!onReloadingCoolDown)
         {
+            Debug.Log("SHOTING" + shooting);
+            Debug.Log("CROUCH" + crouch);
             animator.SetBool("isJumping", isJumping(characterController));
             animator.SetBool("shooting", shooting);
             animator.SetBool("crouch", IsCrouch(command));
@@ -371,7 +379,7 @@ public class CsClient : MonoBehaviour
             shootingCoolDown = 0;
             onShootingCoolDown = true;
             bullets--;
-            Debug.Log(bullets);
+            inGameUi.setAmmo(bullets.ToString());
             if (bullets == 0)
             {
                 animator.SetBool("isReloading", true);
@@ -422,8 +430,9 @@ public class CsClient : MonoBehaviour
             }
             if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0)
             {
+                Debug.Log(hit.transform.tag);
                 command.hasHit = true;
-                command.damage = new Shoot(hit.transform.gameObject.name, 100);
+                //command.damage = new Shoot(hit.transform.gameObject.name, 100);
             }
         }
         
