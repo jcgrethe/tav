@@ -239,10 +239,14 @@ public class CsServer : MonoBehaviour
 
     private void ReceiveDamage(Shoot damage, String id)
     {
-        playersLife[damage.Id] -= damage.Damage;
-        if (playersLife[damage.Id] <= 0)
+        
+        if (playersLife[damage.Id] > 0)
         {
-            kills[id] = kills[id] + 1;
+            playersLife[damage.Id] -= damage.Damage;
+            if (playersLife[damage.Id] <= 0)
+            {
+                kills[id] = kills[id] + 1;
+            }
         }
         Debug.Log("Receive damage to: " + damage.Id);
     }
