@@ -217,6 +217,7 @@ public class CsClient : MonoBehaviour
     {
         if(!join) return;
         ReadInput();
+        
         if (commandServer.Count != 0)
         {
             var packet2 = Packet.Obtain();
@@ -233,6 +234,7 @@ public class CsClient : MonoBehaviour
         }
         
     }
+    
     
     private void AwaitJoinGame(Packet packet)
     {
@@ -387,8 +389,8 @@ public class CsClient : MonoBehaviour
         {
             //Debug.Log("COMMANDO" + command.commandNumber);
             Execute(command, client, characterController);
-            //StartCoroutine(addCommandoTolistWithLag(command));
-            addCommandoTolist(command);
+            StartCoroutine(addCommandoTolistWithLag(command));
+            //addCommandoTolist(command);
             sendEmptyCommand = true;
         } 
         else if(sendEmptyCommand)
@@ -468,7 +470,7 @@ public class CsClient : MonoBehaviour
 
     private IEnumerator addCommandoTolistWithLag(Command command)
     {
-        yield return new WaitForSeconds(.5f);
+        yield return new WaitForSeconds(.1f);
         commandServer.Add(command);
         packetNumber++;
     }
