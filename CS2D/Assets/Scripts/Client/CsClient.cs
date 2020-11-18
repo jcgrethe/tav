@@ -57,7 +57,7 @@ public class CsClient : MonoBehaviour
     private GameManager gameManager;
     public InGameUi inGameUi;
     private bool sendEmptyCommand = true;
-    
+    private bool win = false;
     
     // Start is called before the first frame update
     void Start()
@@ -125,6 +125,10 @@ public class CsClient : MonoBehaviour
 
     void Update() 
     {
+        if (win)
+        {
+            return;
+        }
         if (onShootingCoolDown)
         {
             shootingCoolDown += Time.deltaTime;
@@ -187,6 +191,10 @@ public class CsClient : MonoBehaviour
 
     public void FixedUpdate()
     {
+        if (win)
+        {
+            return;
+        }
         if (!isDead)
         {
             SendInput();
@@ -219,14 +227,17 @@ public class CsClient : MonoBehaviour
 
     private void Win(Packet packet)
     {
+        win = true;
         String id = packet.buffer.GetString();
         if (id.Equals(client.name))
         {
+            inGameUi.Win();
             Debug.Log("WIN");
         }
         else
         {
-            Debug.Log("LOOSE");
+            inGameUi.Lose();
+            Debug.Log("LOSE");
         }
         channel.Disconnect();
         StartCoroutine(LoadMenu());
@@ -234,7 +245,7 @@ public class CsClient : MonoBehaviour
 
     private IEnumerator LoadMenu()
     {
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(10f);
         SceneManager.LoadScene("Scene/MainMenu");
     }
 

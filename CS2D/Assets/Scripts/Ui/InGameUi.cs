@@ -11,7 +11,8 @@ public class InGameUi : MonoBehaviour
     public TMP_Text ammoText;
     public TMP_Text lifeText;
     public TMP_Text killsText;
-
+    public GameObject win;
+    public GameObject lose;
     public void setCamera(Camera camera)
     {
         canvas.worldCamera = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
@@ -33,5 +34,15 @@ public class InGameUi : MonoBehaviour
         killsText.SetText(kills);
     }
 
+    public void Lose()
+    {
+        lose.SetActive(true);
+    }
+    
+    public void Win()
+    {
+        win.SetActive(true);
+    }
+    
 
 }
