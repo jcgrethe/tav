@@ -58,6 +58,8 @@ public class CsClient : MonoBehaviour
     public InGameUi inGameUi;
     private bool sendEmptyCommand = true;
     private bool win = false;
+    private float delay = 0.1f;
+    
     
     // Start is called before the first frame update
     void Start()
@@ -129,6 +131,30 @@ public class CsClient : MonoBehaviour
         {
             return;
         }
+
+
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            delay = 0;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            delay = 0.1f;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            delay = 0.2f;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            delay = 0.3f;
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            delay = 0.4f;
+        }
+        
+        
         if (onShootingCoolDown)
         {
             shootingCoolDown += Time.deltaTime;
@@ -498,7 +524,7 @@ public class CsClient : MonoBehaviour
 
     private IEnumerator addCommandoTolistWithLag(Command command)
     {
-        yield return new WaitForSeconds(.1f);
+        yield return new WaitForSeconds(delay);
         commandServer.Add(command);
         packetNumber++;
     }

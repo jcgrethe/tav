@@ -15,6 +15,8 @@ public class MainMenu : MonoBehaviour
     public void Start()
     {
         gameManager = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
+        Cursor.SetCursor(null, Vector2.zero, CursorMode.Auto);
+        Cursor.lockState = CursorLockMode.None;
     }
 
     public void StartServer()
@@ -31,5 +33,6 @@ public class MainMenu : MonoBehaviour
     
     public void StartServerOnly()
     {
+        gameManager.ip = "127.0.0.1";
         SceneManager.LoadScene("Scene/OnlyServer");
     }}
