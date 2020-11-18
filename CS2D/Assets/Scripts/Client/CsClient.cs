@@ -60,7 +60,7 @@ public class CsClient : MonoBehaviour
     private bool sendEmptyCommand = true;
     private bool win = false;
     private float delay = 0.1f;
-    
+    private bool firstConciliation = true;
     
     // Start is called before the first frame update
     void Start()
@@ -421,7 +421,7 @@ public class CsClient : MonoBehaviour
         }
 
         var svPos = conciliateGameObject.transform.position;
-        svPos.y = client.transform.position.y;
+        if(!firstConciliation) svPos.y = client.transform.position.y;
         //var clPos = client.transform.position;
         client.transform.position = svPos;
 
