@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     // Start is called before the first frame update
 
     public String ip;
+    public String port;
     void Start()
     {
         DontDestroyOnLoad(gameObject);

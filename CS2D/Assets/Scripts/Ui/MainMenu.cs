@@ -9,7 +9,9 @@ using UnityEngine.UI;
 public class MainMenu : MonoBehaviour
 {
 
-    public GameObject inputField;
+    public GameObject inputFieldIp;
+    public GameObject inputFieldPort;
+
     private GameManager gameManager;
 
     public void Start()
@@ -27,7 +29,8 @@ public class MainMenu : MonoBehaviour
     
     public void StartClient()
     {
-        gameManager.ip = inputField.GetComponent<TMP_InputField>().text;
+        gameManager.ip = inputFieldIp.GetComponent<TMP_InputField>().text;
+        gameManager.port = inputFieldPort.GetComponent<TMP_InputField>().text;
         SceneManager.LoadScene("Scene/Client");
     }
     

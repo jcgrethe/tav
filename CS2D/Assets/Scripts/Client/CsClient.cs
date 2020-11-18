@@ -70,6 +70,7 @@ public class CsClient : MonoBehaviour
         {
             gameManager = gameManagerObject.GetComponent<GameManager>();
             serverIP = gameManager.ip;
+            clientPort = Int32.Parse(gameManager.port);
         }
         audioSource = GetComponent<AudioSource>();
         JoinPlayer();
