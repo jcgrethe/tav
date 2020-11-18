@@ -19,7 +19,8 @@ public class CsClient : MonoBehaviour
     public int pps = 100;
     public int requiredSnapshots = 3;
     public int packetNumber = 0;
-    private int serverPort = 9000;
+    public int serverPort = 9000;
+    public int clientPort;
     public GameObject ClientPrefab;
     private GameObject client;
     public Material material;
@@ -80,7 +81,7 @@ public class CsClient : MonoBehaviour
 
     public void Awake()
     {
-        channel = new Channel(9001);
+        channel = new Channel(clientPort);
 
         clients = new Dictionary<string, GameObject>();
     }

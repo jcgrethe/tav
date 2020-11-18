@@ -19,6 +19,8 @@ public class CsServer : MonoBehaviour
     private Dictionary<String, GameObject> playerServer;
     private Dictionary<String, int> lastCommand;
     private Dictionary<String, String> playerIps;
+    private Dictionary<String, int> playerPorts;
+
     private Dictionary<String, int> kills;
     private float accum3;
     public GameObject ServerPrefab;
@@ -33,9 +35,11 @@ public class CsServer : MonoBehaviour
     public List<GameObject> spots;
     private bool win = false;
     private String winnerId;
+
+    public int serverPort;
     public void Awake()
     {
-        channel = new Channel(9000);
+        channel = new Channel(serverPort);
         playerServer = new Dictionary<string, GameObject>();
         lastCommand = new Dictionary<string, int>();
         playerIps = new Dictionary<string, string>();
@@ -44,6 +48,7 @@ public class CsServer : MonoBehaviour
         playersLife = new Dictionary<string, int>();
         timeToRespawn = new Dictionary<string, float>();
         kills = new Dictionary<string, int>();
+        playerPorts = new Dictionary<string, int>();
     }
 
     public void Update()
@@ -123,6 +128,7 @@ public class CsServer : MonoBehaviour
         lastSnapshot[client.name] = 0;
         playersLife[client.name] = 100;
         timeToRespawn[client.name] = 0;
+        playerPorts[client.name] = packet.fromEndPoint.Port;
         kills[client.name] = 0;
         //send new player to all clients
         foreach (var kv in playerIps)
@@ -132,7 +138,7 @@ public class CsServer : MonoBehaviour
             auxPacket.buffer.PutBits(1, 0, 50);
             auxPacket.buffer.PutString(client.name);
             auxPacket.buffer.Flush();
-            Send(kv.Value, clientPort, channel, auxPacket);
+            Send(kv.Value, playerPorts[kv.Key], channel, auxPacket);
         }
         
         playerIps[client.name] = packet.fromEndPoint.Address.ToString();
@@ -152,7 +158,7 @@ public class CsServer : MonoBehaviour
         }
         packetToSend.buffer.Flush();
         string serverIP = playerIps[client.name];
-        Send(serverIP, clientPort, channel, packetToSend);
+        Send(serverIP, playerPorts[client.name], channel, packetToSend);
         
     }
 
@@ -202,7 +208,7 @@ public class CsServer : MonoBehaviour
             updatePacket.buffer.Flush();
 
             string serverIP = kv.Value;
-            Send(serverIP, clientPort, channel, updatePacket);
+            Send(serverIP, playerPorts[kv.Key], channel, updatePacket);
         
         }
 
@@ -250,7 +256,7 @@ public class CsServer : MonoBehaviour
         packet3.buffer.PutUInt(max);
         packet3.buffer.Flush();
         string serverIP = playerIps[id];
-        Send(serverIP, clientPort, channel, packet3);
+        Send(serverIP, playerPorts[id], channel, packet3);
         
     }
 
@@ -281,7 +287,7 @@ public class CsServer : MonoBehaviour
             packet3.buffer.PutEnum(messagetype.win, quantityOfMessages);
             packet3.buffer.PutString(id);
             packet3.buffer.Flush();
-            Send(ip.Value, clientPort, channel, packet3);
+            Send(ip.Value, playerPorts[ip.Key], channel, packet3);
         }
     }
 
