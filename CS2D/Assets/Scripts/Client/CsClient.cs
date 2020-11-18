@@ -456,14 +456,14 @@ public class CsClient : MonoBehaviour
             Execute(command, client, characterController);
             Debug.Log("CLIENT COMMAND" + packetNumber);
             //packetNumber++;
-            //StartCoroutine(addCommandoTolistWithLag(command));
-            addCommandoTolist(command);
+            StartCoroutine(addCommandoTolistWithLag(command));
+            //addCommandoTolist(command);
             sendEmptyCommand = true;
         } else if(sendEmptyCommand)
         {
             Debug.Log("CLIENT COMMAND" + packetNumber);
-            //StartCoroutine(addCommandoTolistWithLag(command));
-            commandServer.Add(command);
+            StartCoroutine(addCommandoTolistWithLag(command));
+            //commandServer.Add(command);
             //packetNumber++;
             sendEmptyCommand = false;
         }
