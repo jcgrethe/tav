@@ -1095,7 +1095,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   maxPlayers: 6
   pps: 30
-  ServerPrefab: {fileID: 7648503600546279044, guid: a9c57631593be4fc191ab9a45e5067db,
+  ServerPrefab: {fileID: 5953766332545911426, guid: 79ed0664a4db4480d8685ab84457f1f6,
     type: 3}
   spots:
   - {fileID: 1683785267}

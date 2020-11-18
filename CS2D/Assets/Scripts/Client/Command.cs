@@ -14,6 +14,7 @@ public class Command
     public bool hasHit = false;
     public Shoot damage;
     public Quaternion quaternion;
+    public float deltaT;
 
     public float HorizontalMove => horizontalMove;
 
@@ -30,7 +31,7 @@ public class Command
     }
 
     public Command(int commandNumber, float horizontalMove, float verticalMove, float timestamp
-        , bool jump, bool shoot, bool crouch, Quaternion quaternion)
+        , bool jump, bool shoot, bool crouch, Quaternion quaternion, float deltaT)
     {
         this.commandNumber = commandNumber;
         this.horizontalMove = horizontalMove;
@@ -40,6 +41,7 @@ public class Command
         this.shoot = shoot;
         this.crouch = crouch;
         this.quaternion = quaternion;
+        this.deltaT = deltaT;
     }
 
     public void Serialize(BitBuffer buffer)
@@ -59,7 +61,7 @@ public class Command
         buffer.PutFloat(quaternion.y);
         buffer.PutFloat(quaternion.z);
         buffer.PutFloat(quaternion.w);
-
+        buffer.PutFloat(deltaT);
     }
     
     
@@ -79,7 +81,7 @@ public class Command
             
         }
         quaternion = new Quaternion(buffer.GetFloat(),buffer.GetFloat(),buffer.GetFloat(),buffer.GetFloat());
-
+        deltaT = buffer.GetFloat();
     }
 
     public bool isSendable()

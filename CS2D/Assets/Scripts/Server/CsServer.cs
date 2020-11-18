@@ -110,6 +110,7 @@ public class CsServer : MonoBehaviour
         client.name = client.GetComponent<PlayerId>().Id;
         Destroy(client.GetComponent<Animator>());
         client.transform.GetChild(1).gameObject.active = false;
+        client.transform.GetChild(0).gameObject.active = false;
         playerServer.Add(client.name, client);
         lastCommand[client.name] = 0;
         lastSnapshot[client.name] = 0;
@@ -213,6 +214,7 @@ public class CsServer : MonoBehaviour
             commands.Deserialize(packet.buffer);
             if (commands.commandNumber > currentLastCommand)
             {
+                //Debug.Log("COMMANDO" + commands.commandNumber);
                 //Debug.Log("SERVER" + commands.commandNumber );
                 ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
                 player.transform.rotation = commands.quaternion;

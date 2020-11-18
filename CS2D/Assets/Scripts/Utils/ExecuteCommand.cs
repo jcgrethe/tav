@@ -12,7 +12,7 @@ public class ExecuteCommand
         float gravity = 18000f;
         float jumpSpeed = 3000;
         float verticalSpeed = 0;
-        float speed = 500;
+        float speed = 250;
 
         float horizontalMove = command.HorizontalMove;
         float verticalMove = command.VerticalMove;
@@ -31,7 +31,7 @@ public class ExecuteCommand
         }
         Vector3 gravityMove = new Vector3(0, verticalSpeed, 0);
         Vector3 move = client.transform.forward * verticalMove + client.transform.right * horizontalMove;
-        characterController.Move(speed * Time.deltaTime * move + gravityMove * Time.deltaTime);
+        characterController.Move(speed * command.deltaT * move + gravityMove * command.deltaT);
         //Rotate(client, command);
     }
     

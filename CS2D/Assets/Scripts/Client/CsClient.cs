@@ -326,10 +326,11 @@ public class CsClient : MonoBehaviour
 
     private void Conciliate()
     {
-        if(interpolationBuffer.Count < 1) return;
+        if(interpolationBuffer.Count < 1 || commandServer.Count == 0) return;
         var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
+        Debug.Log("LIST COMMAND" + commandServer.Count);
         foreach (var auxCommand in commandServer)
         {
             Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
@@ -337,8 +338,13 @@ public class CsClient : MonoBehaviour
 
         var svPos = conciliateGameObject.transform.position;
 
-        var yPos = Math.Abs(svPos.y - client.transform.position.y) > 4 ? svPos.y : client.transform.position.y; 
-        var clientPos = new Vector3( svPos.x, yPos, svPos.z);
+        Debug.Log("Client pos" + client.transform.position);
+        Debug.Log("SV pos" + svPos);
+
+        var yPos = Math.Abs(svPos.y - client.transform.position.y) > 4 ? svPos.y : client.transform.position.y;
+        var xPos = Math.Abs(svPos.x - client.transform.position.x) > 4 ? svPos.x : client.transform.position.x;
+        var zPos = Math.Abs(svPos.z - client.transform.position.z) > 4 ? svPos.z : client.transform.position.z;
+        var clientPos = new Vector3(xPos, yPos, zPos);
 
         client.transform.position = clientPos;
     }
@@ -349,7 +355,7 @@ public class CsClient : MonoBehaviour
         Rotate(client, Input.GetAxis("Mouse X"));
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
             Input.GetAxis("Vertical"), timeout, 
-            Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation );
+            Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation, Time.deltaTime);
         if (!onReloadingCoolDown)
         {
             animator.SetBool("isJumping", isJumping(characterController));
@@ -361,7 +367,6 @@ public class CsClient : MonoBehaviour
             animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
         }
 
-        Execute(command, client, characterController);
         LocalCameraRotate();
         if (IsShooting(command))
         {
@@ -371,6 +376,8 @@ public class CsClient : MonoBehaviour
 
         if (command.isSendable())
         {
+            //Debug.Log("COMMANDO" + command.commandNumber);
+            Execute(command, client, characterController);
             commandServer.Add(command);
             packetNumber++;
             sendEmptyCommand = true;
