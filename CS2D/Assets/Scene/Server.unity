@@ -922,7 +922,7 @@ MonoBehaviour:
   coolDown: 0.2
   reloadCoolDown: 4.5
   initialAmmo: 30
-  inGameUi: {fileID: 0}
+  inGameUi: {fileID: 908718428}
 --- !u!4 &803758058
 Transform:
   m_ObjectHideFlags: 0
