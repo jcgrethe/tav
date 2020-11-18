@@ -18,7 +18,7 @@ public class CsClient : MonoBehaviour
     private float clientTime = 0f;
     public int pps = 100;
     public int requiredSnapshots = 3;
-    private int packetNumber = 0;
+    public int packetNumber = 0;
     private int serverPort = 9000;
     public GameObject ClientPrefab;
     private GameObject client;
@@ -127,6 +127,9 @@ public class CsClient : MonoBehaviour
 
     void Update() 
     {
+        Debug.Log("INTERP BUFFEr" + interpolationBuffer.Count);
+        Debug.Log("COmmand BUFFEr" + commandServer.Count);
+
         if (win)
         {
             return;
@@ -136,22 +139,27 @@ public class CsClient : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Alpha0))
         {
             delay = 0;
+            Debug.Log("DELAY" + delay);
         }
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
             delay = 0.1f;
+            Debug.Log("DELAY" + delay);
         }
         if (Input.GetKeyDown(KeyCode.Alpha2))
         {
             delay = 0.2f;
+            Debug.Log("DELAY" + delay);
         }
         if (Input.GetKeyDown(KeyCode.Alpha3))
         {
             delay = 0.3f;
+            Debug.Log("DELAY" + delay);
         }
         if (Input.GetKeyDown(KeyCode.Alpha4))
         {
             delay = 0.4f;
+            Debug.Log("DELAY" + delay);
         }
         
         
@@ -181,6 +189,7 @@ public class CsClient : MonoBehaviour
         {
             if (commandServer[0].timestamp < Time.time)
             {
+                //Debug.Log("DELETE" + commandServer[0].commandNumber);
                 commandServer.RemoveAt(0);
             }
             else
@@ -192,7 +201,7 @@ public class CsClient : MonoBehaviour
         InterpolateAndConciliate();
         if (life <= 0  && !isDead)
         {
-            Debug.Log("DEAD");
+            //Debug.Log("DEAD");
             animator.SetBool("isDead", true);
             isDead = true;
         }
@@ -258,12 +267,12 @@ public class CsClient : MonoBehaviour
         if (id.Equals(client.name))
         {
             inGameUi.Win();
-            Debug.Log("WIN");
+            //Debug.Log("WIN");
         }
         else
         {
             inGameUi.Lose();
-            Debug.Log("LOSE");
+            //Debug.Log("LOSE");
         }
         channel.Disconnect();
         StartCoroutine(LoadMenu());
@@ -322,6 +331,7 @@ public class CsClient : MonoBehaviour
         {
             if (commandServer[0].commandNumber <= toDel)
             {
+                Debug.Log("REMOVE OK" + commandServer[0].commandNumber);
                 commandServer.RemoveAt(0);
             }
             else
@@ -444,14 +454,17 @@ public class CsClient : MonoBehaviour
         {
             //Debug.Log("COMMANDO" + command.commandNumber);
             Execute(command, client, characterController);
-            StartCoroutine(addCommandoTolistWithLag(command));
-            //addCommandoTolist(command);
+            Debug.Log("CLIENT COMMAND" + packetNumber);
+            //packetNumber++;
+            //StartCoroutine(addCommandoTolistWithLag(command));
+            addCommandoTolist(command);
             sendEmptyCommand = true;
-        } 
-        else if(sendEmptyCommand)
+        } else if(sendEmptyCommand)
         {
+            Debug.Log("CLIENT COMMAND" + packetNumber);
+            //StartCoroutine(addCommandoTolistWithLag(command));
             commandServer.Add(command);
-            packetNumber++;
+            //packetNumber++;
             sendEmptyCommand = false;
         }
         //Debug.Log("CLIENT" + packetNumber );
@@ -526,6 +539,8 @@ public class CsClient : MonoBehaviour
     private IEnumerator addCommandoTolistWithLag(Command command)
     {
         yield return new WaitForSeconds(delay);
+        Debug.Log("ADDing COMMAND" + command.commandNumber);
+        command.commandNumber = packetNumber;
         commandServer.Add(command);
         packetNumber++;
     }

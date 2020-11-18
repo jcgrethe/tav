@@ -223,8 +223,7 @@ public class CsServer : MonoBehaviour
             commands.Deserialize(packet.buffer);
             if (commands.commandNumber >= currentLastCommand)
             {
-                //Debug.Log("COMMANDO" + commands.commandNumber);
-                //Debug.Log("SERVER" + commands.commandNumber );
+                Debug.Log("COMMANDO" + commands.commandNumber);
                 ExecuteCommand.Execute(commands, player, player.GetComponent<CharacterController>());
                 player.transform.rotation = commands.quaternion;
                 if (commands.hasHit)
@@ -236,15 +235,15 @@ public class CsServer : MonoBehaviour
             }
             else
             {
+                Debug.Log("ERROR");
                 Debug.Log("currentLastCommand" + currentLastCommand);
                 Debug.Log("NUMBER" + commands.commandNumber);
                 Debug.Log("hasHit" + commands.hasHit);
-
             }
         }
 
         lastCommand[id] = max;
-
+        Debug.Log("SERVER MAX COMMAND" + lastCommand[id]);
         //send ack
         var packet3 = Packet.Obtain();
         packet3.buffer.PutEnum(messagetype.ackInput, quantityOfMessages);
