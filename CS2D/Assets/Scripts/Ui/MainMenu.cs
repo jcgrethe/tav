@@ -24,6 +24,7 @@ public class MainMenu : MonoBehaviour
     public void StartServer()
     {
         gameManager.ip = "127.0.0.1";
+        gameManager.port = "9001";
         SceneManager.LoadScene("Scene/Server");
     }
     
@@ -37,5 +38,6 @@ public class MainMenu : MonoBehaviour
     public void StartServerOnly()
     {
         gameManager.ip = "127.0.0.1";
+        gameManager.port = "9001";
         SceneManager.LoadScene("Scene/OnlyServer");
     }}
