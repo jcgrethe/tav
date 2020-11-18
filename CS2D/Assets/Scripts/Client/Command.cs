@@ -90,7 +90,6 @@ public class Command
         {
             return false;
         }
-        Debug.Log("SEND");
         return true;
     }
 }

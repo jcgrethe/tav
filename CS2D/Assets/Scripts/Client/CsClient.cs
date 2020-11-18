@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -330,23 +331,58 @@ public class CsClient : MonoBehaviour
         var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
-        Debug.Log("LIST COMMAND" + commandServer.Count);
+        //Debug.Log("LIST COMMAND" + commandServer.Count);
         foreach (var auxCommand in commandServer)
         {
             Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
         }
 
         var svPos = conciliateGameObject.transform.position;
+        var clPos = client.transform.position;
 
-        Debug.Log("Client pos" + client.transform.position);
-        Debug.Log("SV pos" + svPos);
+        bool update = false;
 
-        var yPos = Math.Abs(svPos.y - client.transform.position.y) > 4 ? svPos.y : client.transform.position.y;
-        var xPos = Math.Abs(svPos.x - client.transform.position.x) > 4 ? svPos.x : client.transform.position.x;
-        var zPos = Math.Abs(svPos.z - client.transform.position.z) > 4 ? svPos.z : client.transform.position.z;
-        var clientPos = new Vector3(xPos, yPos, zPos);
+        var clientPos = new Vector3();
+        
+        if (Math.Abs(svPos.y - clPos.y) > 20)
+        {
+            Debug.Log("Y" + Math.Abs(svPos.y - clPos.y));
+            update = true;
+            clientPos.y = svPos.y;
+        }
+        else
+        {
+            clientPos.y = clPos.y;
+        }
+        
+        if (Math.Abs(svPos.x - clPos.x) > 20)
+        {
+            Debug.Log("X" + Math.Abs(svPos.x - clPos.x));
+            update = true;
 
-        client.transform.position = clientPos;
+            clientPos.x = svPos.x;
+        }
+        else
+        {
+            clientPos.x= clPos.x;
+        }
+        
+        if (Math.Abs(svPos.z - clPos.z) > 20)
+        {
+            Debug.Log("Z" + Math.Abs(svPos.z - clPos.z));
+            update = true;
+            clientPos.z = svPos.z;
+        }
+        else
+        {
+            clientPos.z = clPos.z;
+        }
+
+        if (update)
+        {
+            Debug.Log("CHANGINGGG");
+            client.transform.position = clientPos;
+        }
     }
 
     private void ReadInput()
@@ -378,8 +414,8 @@ public class CsClient : MonoBehaviour
         {
             //Debug.Log("COMMANDO" + command.commandNumber);
             Execute(command, client, characterController);
-            commandServer.Add(command);
-            packetNumber++;
+            //StartCoroutine(addCommandoTolistWithLag(command));
+            addCommandoTolist(command);
             sendEmptyCommand = true;
         } 
         else if(sendEmptyCommand)
@@ -455,5 +491,18 @@ public class CsClient : MonoBehaviour
             }
         }
         
+    }
+
+    private IEnumerator addCommandoTolistWithLag(Command command)
+    {
+        yield return new WaitForSeconds(0.01f);
+        commandServer.Add(command);
+        packetNumber++;
+    }
+    
+    private void addCommandoTolist(Command command)
+    {
+        commandServer.Add(command);
+        packetNumber++;
     }
 }
