@@ -54,6 +54,7 @@ public class CsServer : MonoBehaviour
             switch (packet.buffer.GetEnum<messagetype>(quantityOfMessages))
             {
                 case messagetype.newPlayer:
+                    Debug.Log("NEW");
                     NewPlayer(packet);
                     break;
                 case messagetype.input:
@@ -183,6 +184,7 @@ public class CsServer : MonoBehaviour
         {
             var auxPlayerId = kv.Key;
             snapshot.packetNumber = lastSnapshot[auxPlayerId];
+            snapshot.life = playersLife[auxPlayerId];
             snapshot.life = playersLife[auxPlayerId];
             snapshot.kills = kills[auxPlayerId];
             snapshot.lastCommand = lastCommand[auxPlayerId];

@@ -348,7 +348,7 @@ public class CsClient : MonoBehaviour
 
         var svPos = conciliateGameObject.transform.position;
         var clPos = client.transform.position;
-        Debug.Log(svPos);
+//        Debug.Log(svPos);
         //Debug.Log(clPos);
         //var yPos = Math.Abs(svPos.y - clPos.y) > 20 ? svPos.y : clPos.y;
         //var xPos = Math.Abs(svPos.x - clPos.x) > 20 ? svPos.x : clPos.x;
