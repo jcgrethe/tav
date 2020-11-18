@@ -273,7 +273,11 @@ public class CsClient : MonoBehaviour
         var buffer = packet.buffer;
         var snapshot = new Snapshot(-1);
         snapshot.Deserialize(buffer);
-        if(snapshot.life != 0  && isDead) isDead = false; 
+        if (snapshot.life != 0 && isDead)
+        {
+            client.transform.position = snapshot.playerEntities[client.name].position;
+            isDead = false;
+        } 
         life = snapshot.life;
         inGameUi.setLife(life.ToString());
         inGameUi.setKills(snapshot.kills.ToString());
@@ -327,7 +331,7 @@ public class CsClient : MonoBehaviour
 
     private void Conciliate()
     {
-        if(interpolationBuffer.Count < 1 || commandServer.Count == 0) return;
+        if(interpolationBuffer.Count < 1) return;
         var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
@@ -339,50 +343,13 @@ public class CsClient : MonoBehaviour
 
         var svPos = conciliateGameObject.transform.position;
         var clPos = client.transform.position;
-
-        bool update = false;
-
-        var clientPos = new Vector3();
         
-        if (Math.Abs(svPos.y - clPos.y) > 20)
-        {
-            Debug.Log("Y" + Math.Abs(svPos.y - clPos.y));
-            update = true;
-            clientPos.y = svPos.y;
-        }
-        else
-        {
-            clientPos.y = clPos.y;
-        }
-        
-        if (Math.Abs(svPos.x - clPos.x) > 20)
-        {
-            Debug.Log("X" + Math.Abs(svPos.x - clPos.x));
-            update = true;
+        var yPos = Math.Abs(svPos.y - clPos.y) > 10 ? svPos.y : clPos.y;
+        var xPos = Math.Abs(svPos.x - clPos.x) > 10 ? svPos.x : clPos.x;
+        var zPos = Math.Abs(svPos.z - clPos.z) > 10 ? svPos.z : clPos.z;
+        var clientPos = new Vector3(xPos, yPos, zPos);
 
-            clientPos.x = svPos.x;
-        }
-        else
-        {
-            clientPos.x= clPos.x;
-        }
-        
-        if (Math.Abs(svPos.z - clPos.z) > 20)
-        {
-            Debug.Log("Z" + Math.Abs(svPos.z - clPos.z));
-            update = true;
-            clientPos.z = svPos.z;
-        }
-        else
-        {
-            clientPos.z = clPos.z;
-        }
-
-        if (update)
-        {
-            Debug.Log("CHANGINGGG");
-            client.transform.position = clientPos;
-        }
+        client.transform.position = clientPos;
     }
 
     private void ReadInput()

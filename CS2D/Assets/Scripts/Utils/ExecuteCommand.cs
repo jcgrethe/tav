@@ -12,7 +12,7 @@ public class ExecuteCommand
         float gravity = 18000f;
         float jumpSpeed = 3000;
         float verticalSpeed = 0;
-        float speed = 250;
+        float speed = 150;
 
         float horizontalMove = command.HorizontalMove;
         float verticalMove = command.VerticalMove;
