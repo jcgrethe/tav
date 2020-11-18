@@ -290,5 +290,10 @@ public class CsServer : MonoBehaviour
     {
         return Instantiate(ServerPrefab, pos, Quaternion.identity);
     }
-    
+
+    void OnDestroy()
+    {
+        channel.Disconnect();
+    }
+
 }

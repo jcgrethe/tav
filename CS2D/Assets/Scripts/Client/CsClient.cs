@@ -409,6 +409,7 @@ public class CsClient : MonoBehaviour
         }
 
         var svPos = conciliateGameObject.transform.position;
+        svPos.y = client.transform.position.y;
         //var clPos = client.transform.position;
         client.transform.position = svPos;
 
