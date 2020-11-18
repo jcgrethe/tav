@@ -185,6 +185,7 @@ public class CsServer : MonoBehaviour
             snapshot.packetNumber = lastSnapshot[auxPlayerId];
             snapshot.life = playersLife[auxPlayerId];
             snapshot.kills = kills[auxPlayerId];
+            snapshot.lastCommand = lastCommand[auxPlayerId];
             lastSnapshot[auxPlayerId]++;
             //serialize
             var updatePacket = Packet.Obtain();

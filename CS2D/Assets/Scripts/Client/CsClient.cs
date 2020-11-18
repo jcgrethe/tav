@@ -190,6 +190,7 @@ public class CsClient : MonoBehaviour
         {
             SendInput();
         }
+        Conciliate();
     }
 
     private void UpdateClient() 
@@ -292,7 +293,6 @@ public class CsClient : MonoBehaviour
     private void InterpolateAndConciliate()
     {
         if(interpolationBuffer.Count >= requiredSnapshots) clientTime += Time.deltaTime;
-        Conciliate();
         while ( Interpolate())
         {
         }
@@ -338,18 +338,24 @@ public class CsClient : MonoBehaviour
         //Debug.Log("LIST COMMAND" + commandServer.Count);
         foreach (var auxCommand in commandServer)
         {
-            Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
+            if (auxCommand.commandNumber > interpolationBuffer[interpolationBuffer.Count - 1].lastCommand)
+            {
+                Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
+            }
         }
 
         var svPos = conciliateGameObject.transform.position;
         var clPos = client.transform.position;
-        
-        var yPos = Math.Abs(svPos.y - clPos.y) > 10 ? svPos.y : clPos.y;
-        var xPos = Math.Abs(svPos.x - clPos.x) > 10 ? svPos.x : clPos.x;
-        var zPos = Math.Abs(svPos.z - clPos.z) > 10 ? svPos.z : clPos.z;
-        var clientPos = new Vector3(xPos, yPos, zPos);
-
-        client.transform.position = clientPos;
+        Debug.Log(svPos);
+        //Debug.Log(clPos);
+        //var yPos = Math.Abs(svPos.y - clPos.y) > 20 ? svPos.y : clPos.y;
+        //var xPos = Math.Abs(svPos.x - clPos.x) > 20 ? svPos.x : clPos.x;
+        //var zPos = Math.Abs(svPos.z - clPos.z) > 20 ? svPos.z : clPos.z;
+        //var clientPos = new Vector3(xPos, yPos, zPos);
+        client.transform.position = svPos;
+        //var offset = clientPos - client.transform.position;
+        //offset = offset.normalized * 100;
+        //characterController.Move(offset * Time.deltaTime);
     }
 
     private void ReadInput()
@@ -462,7 +468,7 @@ public class CsClient : MonoBehaviour
 
     private IEnumerator addCommandoTolistWithLag(Command command)
     {
-        yield return new WaitForSeconds(0.01f);
+        yield return new WaitForSeconds(.5f);
         commandServer.Add(command);
         packetNumber++;
     }
