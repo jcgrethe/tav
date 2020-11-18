@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static AnimatorStates;
 using static SendUtil;
 using static ExecuteCommand;
@@ -209,8 +210,32 @@ public class CsClient : MonoBehaviour
                 case messagetype.updateWorld:
                     UpdateWord(packet);
                     break;
+                case messagetype.win:
+                    Win(packet);
+                    break;
             }
         }
+    }
+
+    private void Win(Packet packet)
+    {
+        String id = packet.buffer.GetString();
+        if (id.Equals(client.name))
+        {
+            Debug.Log("WIN");
+        }
+        else
+        {
+            Debug.Log("LOOSE");
+        }
+        channel.Disconnect();
+        StartCoroutine(LoadMenu());
+    }
+
+    private IEnumerator LoadMenu()
+    {
+        yield return new WaitForSeconds(3f);
+        SceneManager.LoadScene("Scene/MainMenu");
     }
 
     private void SendInput()
@@ -347,17 +372,9 @@ public class CsClient : MonoBehaviour
         }
 
         var svPos = conciliateGameObject.transform.position;
-        var clPos = client.transform.position;
-//        Debug.Log(svPos);
-        //Debug.Log(clPos);
-        //var yPos = Math.Abs(svPos.y - clPos.y) > 20 ? svPos.y : clPos.y;
-        //var xPos = Math.Abs(svPos.x - clPos.x) > 20 ? svPos.x : clPos.x;
-        //var zPos = Math.Abs(svPos.z - clPos.z) > 20 ? svPos.z : clPos.z;
-        //var clientPos = new Vector3(xPos, yPos, zPos);
+        //var clPos = client.transform.position;
         client.transform.position = svPos;
-        //var offset = clientPos - client.transform.position;
-        //offset = offset.normalized * 100;
-        //characterController.Move(offset * Time.deltaTime);
+
     }
 
     private void ReadInput()

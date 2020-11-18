@@ -31,7 +31,8 @@ public class CsServer : MonoBehaviour
     private int packetNumber = 0;
     private Dictionary<String, int> playersLife;
     public List<GameObject> spots;
-    
+    private bool win = false;
+    private String winnerId;
     public void Awake()
     {
         channel = new Channel(9000);
@@ -47,6 +48,11 @@ public class CsServer : MonoBehaviour
 
     public void Update()
     {
+        if (win)
+        {
+            SendWin(winnerId);
+            return;
+        }
         Packet packet; 
         while ((packet = channel.GetPacket()) != null)
         {
@@ -215,7 +221,7 @@ public class CsServer : MonoBehaviour
         for (int i = 0; i < quantity; i++){
             var commands = new Command();
             commands.Deserialize(packet.buffer);
-            if (commands.commandNumber > currentLastCommand)
+            if (commands.commandNumber >= currentLastCommand)
             {
                 //Debug.Log("COMMANDO" + commands.commandNumber);
                 //Debug.Log("SERVER" + commands.commandNumber );
@@ -227,6 +233,13 @@ public class CsServer : MonoBehaviour
                 }
                 max = commands.commandNumber;
                 lastCommandObject[id] = commands;
+            }
+            else
+            {
+                Debug.Log("currentLastCommand" + currentLastCommand);
+                Debug.Log("NUMBER" + commands.commandNumber);
+                Debug.Log("hasHit" + commands.hasHit);
+
             }
         }
 
@@ -251,10 +264,28 @@ public class CsServer : MonoBehaviour
             if (playersLife[damage.Id] <= 0)
             {
                 kills[id] = kills[id] + 1;
+                if (kills[id] >= 2)
+                {
+                    winnerId = id;
+                    SendWin(id);
+                }
             }
         }
         Debug.Log("Receive damage to: " + damage.Id);
     }
+
+    private void SendWin(string id)
+    {
+        foreach (var ip in playerIps)
+        {
+            var packet3 = Packet.Obtain();
+            packet3.buffer.PutEnum(messagetype.win, quantityOfMessages);
+            packet3.buffer.PutString(id);
+            packet3.buffer.Flush();
+            Send(ip.Value, clientPort, channel, packet3);
+        }
+    }
+
     public GameObject createPlayer(Vector3 pos)
     {
         return Instantiate(ServerPrefab, pos, Quaternion.identity);
