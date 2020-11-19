@@ -59,7 +59,7 @@ public class CsClient : MonoBehaviour
     public InGameUi inGameUi;
     private bool sendEmptyCommand = true;
     private bool win = false;
-    private float delay = 0.1f;
+    private float delay = 0f;
     private bool firstConciliation = true;
     
     // Start is called before the first frame update
