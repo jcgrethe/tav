@@ -5,6 +5,12 @@ TagManager:
   serializedVersion: 2
   tags:
   - Food
+  - Enemy
+  - Wall
+  - GameManager
+  - Leg
+  - Shoulder
+  - Head
   layers:
   - Default
   - TransparentFX

@@ -73,7 +73,9 @@ public class Channel {
 					Debug.Log("SocketException while reading from socket: " + e + " (" + e.ErrorCode + ")");
 				}
 			} catch (Exception e) {
-				Debug.Log("Exception while reading from socket: " + e);
+				Debug.Log(e.StackTrace);
+				//Debug.Log(e);
+				//Debug.Log("Exception while reading from socket: " + e);
 			}
 		}
 	}

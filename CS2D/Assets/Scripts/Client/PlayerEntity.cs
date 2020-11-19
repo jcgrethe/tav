@@ -12,6 +12,7 @@ public class PlayerEntity
     public Quaternion rotation;
     public GameObject playerGameObject;
     private Command command;
+    private bool dead = false;
 
     public PlayerEntity(GameObject playerGameObject, Command command, String id)
     {
@@ -19,6 +20,18 @@ public class PlayerEntity
         //isJumping = isJumping(characterController);
         this.command = command;
         this.id = id;
+    }
+    
+    public PlayerEntity(GameObject playerGameObject, Command command, String id, int life)
+    {
+        this.playerGameObject = playerGameObject;
+        //isJumping = isJumping(characterController);
+        this.command = command;
+        this.id = id;
+        if (life <= 0)
+        {
+            dead = true;
+        }
     }
     
     public PlayerEntity(GameObject playerGameObject, String id)
@@ -60,6 +73,7 @@ public class PlayerEntity
         rotation.x = buffer.GetFloat();
         rotation.y = buffer.GetFloat();
         rotation.z = buffer.GetFloat();
+        dead = buffer.GetBit();
     }
     
     public void SerializeWithCommand(BitBuffer buffer)
@@ -76,6 +90,7 @@ public class PlayerEntity
         buffer.PutFloat(rotation.z);
       
         command.Serialize(buffer);
+        buffer.PutBit(dead);
 
     }
     
@@ -93,6 +108,7 @@ public class PlayerEntity
 
         command = new Command();
         command.Deserialize(buffer);
+        dead = buffer.GetBit();
     }
 
     public static Dictionary<String, PlayerEntity> createInterpolated(Snapshot previousEntities, Snapshot nextEntities,
@@ -105,7 +121,7 @@ public class PlayerEntity
             {
                 var previous = currentPlayer.Value;
                 var next = nextEntities.playerEntities[previous.id];
-                var playerEntity = new PlayerEntity(previous.playerGameObject, previous.command, next.id);
+                var playerEntity = new PlayerEntity(previous.playerGameObject, previous.command, next.id, next.dead? 0: 100);
                 playerEntity.position = playerEntity.position + Vector3.Lerp(previous.position, next.position, t);
                 var deltaRot = Quaternion.Lerp(previous.rotation, next.rotation, t);
                 var rot = new Quaternion();
@@ -144,6 +160,7 @@ public class PlayerEntity
             animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
             animator.SetBool("isWalkingRight", HorizontalMovePos(command));
             animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
+            animator.SetBool("isDead", dead);
         }
     }
     

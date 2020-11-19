@@ -1,22 +1,26 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using static AnimatorStates;
 using static SendUtil;
 using static ExecuteCommand;
-
+using static MessageCsType;
 using Random = UnityEngine.Random;
 
 public class CsClient : MonoBehaviour
 {
 
     private Channel channel;
-
+    private AudioSource audioSource;
     private float clientTime = 0f;
     public int pps = 100;
     public int requiredSnapshots = 3;
-    private int packetNumber = 0;
-    private int serverPort = 9000;
+    public int packetNumber = 0;
+    public int serverPort = 9000;
+    public int clientPort;
     public GameObject ClientPrefab;
     private GameObject client;
     public Material material;
@@ -32,16 +36,43 @@ public class CsClient : MonoBehaviour
     private float mouseSensitivity = 6f;
     public float upLimit = -50;
     public float downLimit = 50;
-    public String serverIP = "192.168.1.137";
+    public String serverIP;
     private GameObject mainCamera;
     public GameObject cameraPrefab;
     private bool shooting;
     private bool crouch;
-
-
+    private int life = 100;
+    private bool isDead = false;
     private Animator animator;
+    private bool startInterp = false;
+
+    public float coolDown = .3f;
+    private float shootingCoolDown = 0;
+    private bool onShootingCoolDown = false;
+    
+    public float reloadCoolDown = 2f;
+    private float accumReloadingCoolDown = 0;
+    private bool onReloadingCoolDown = false;
+    public int initialAmmo = 1;
+    private int bullets = 30;
+    private GameManager gameManager;
+    public InGameUi inGameUi;
+    private bool sendEmptyCommand = true;
+    private bool win = false;
+    private float delay = 0f;
+    private bool firstConciliation = true;
+    
     // Start is called before the first frame update
-    void Start() {
+    void Start()
+    {
+        var gameManagerObject = GameObject.FindGameObjectWithTag("GameManager");
+        if (gameManagerObject != null)
+        {
+            gameManager = gameManagerObject.GetComponent<GameManager>();
+            serverIP = gameManager.ip;
+            clientPort = Int32.Parse(gameManager.port);
+        }
+        audioSource = GetComponent<AudioSource>();
         JoinPlayer();
     }
 
@@ -51,7 +82,7 @@ public class CsClient : MonoBehaviour
 
     public void Awake()
     {
-        channel = new Channel(9001);
+        channel = new Channel(clientPort);
 
         clients = new Dictionary<string, GameObject>();
     }
@@ -71,12 +102,12 @@ public class CsClient : MonoBehaviour
         
         GameObject main = Instantiate(cameraPrefab, new Vector3(0, 0, 0), Quaternion.identity);
         main.transform.parent = client.transform;
-        main.transform.localPosition = new Vector3(-0.14f, 2.29f, -6.02f);
+        main.transform.localPosition = new Vector3(1.077f, 1.481f, -2.427f);
         cameraHolder = main.GetComponent<Camera>().transform;
-        
+        inGameUi.setCamera(cameraHolder.GetComponent<Camera>());
         //mainCamera = main;
         var packet4 = Packet.Obtain();
-        packet4.buffer.PutEnum(MessageCsType.messagetype.newPlayer, 5);
+        packet4.buffer.PutEnum(messagetype.newPlayer, quantityOfMessages);
         packet4.buffer.PutString(id);
         var player = new PlayerEntity(client, id);
         player.Serialize(packet4.buffer);
@@ -98,12 +129,69 @@ public class CsClient : MonoBehaviour
 
     void Update() 
     {
-        clientTime += Time.deltaTime;
-        //remove old commands
+        Debug.Log("INTERP BUFFEr" + interpolationBuffer.Count);
+        Debug.Log("COmmand BUFFEr" + commandServer.Count);
+
+        if (win)
+        {
+            return;
+        }
+
+
+        if (Input.GetKeyDown(KeyCode.Alpha0))
+        {
+            delay = 0;
+            Debug.Log("DELAY" + delay);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            delay = 0.1f;
+            Debug.Log("DELAY" + delay);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            delay = 0.2f;
+            Debug.Log("DELAY" + delay);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha3))
+        {
+            delay = 0.3f;
+            Debug.Log("DELAY" + delay);
+        }
+        if (Input.GetKeyDown(KeyCode.Alpha4))
+        {
+            delay = 0.4f;
+            Debug.Log("DELAY" + delay);
+        }
+        
+        
+        if (onShootingCoolDown)
+        {
+            shootingCoolDown += Time.deltaTime;
+            if (shootingCoolDown > coolDown)
+            {
+                onShootingCoolDown = false;
+            }
+        }
+        
+        if (onReloadingCoolDown)
+        {
+            accumReloadingCoolDown += Time.deltaTime;
+            if (accumReloadingCoolDown > reloadCoolDown)
+            {
+                bullets = initialAmmo;
+                inGameUi.setAmmo(bullets.ToString());
+                onReloadingCoolDown = false;
+                animator.SetBool("isReloading", false);
+            }
+        }
+        
+        
         while(commandServer.Count != 0)
         {
             if (commandServer[0].timestamp < Time.time)
             {
+                //Debug.Log("DELETE" + commandServer[0].commandNumber);
                 commandServer.RemoveAt(0);
             }
             else
@@ -113,7 +201,13 @@ public class CsClient : MonoBehaviour
         }
         UpdateClient();
         InterpolateAndConciliate();
-        
+        if (life <= 0  && !isDead)
+        {
+            //Debug.Log("DEAD");
+            animator.SetBool("isDead", true);
+            isDead = true;
+        }
+
         if (Input.GetMouseButtonDown(0))
         {
             shooting = true;
@@ -134,7 +228,15 @@ public class CsClient : MonoBehaviour
 
     public void FixedUpdate()
     {
-        SendInput();
+        if (win)
+        {
+            return;
+        }
+        if (!isDead)
+        {
+            SendInput();
+        }
+        Conciliate();
     }
 
     private void UpdateClient() 
@@ -142,30 +244,57 @@ public class CsClient : MonoBehaviour
         Packet packet;
         while ((packet = channel.GetPacket()) != null)
         {
-            switch (packet.buffer.GetEnum<MessageCsType.messagetype>(5))
+            switch (packet.buffer.GetEnum<messagetype>(quantityOfMessages))
             {
-                case MessageCsType.messagetype.ackInput:
+                case messagetype.ackInput:
                     UpdateInterpolationBuffer(packet);
                     break;
-                case MessageCsType.messagetype.ackJoin:
+                case messagetype.ackJoin:
                     AwaitJoinGame(packet);
                     break;
-                case MessageCsType.messagetype.updateWorld:
+                case messagetype.updateWorld:
                     UpdateWord(packet);
                     break;
-                default:
+                case messagetype.win:
+                    Win(packet);
                     break;
             }
         }
     }
 
+    private void Win(Packet packet)
+    {
+        win = true;
+        String id = packet.buffer.GetString();
+        if (id.Equals(client.name))
+        {
+            inGameUi.Win();
+            //Debug.Log("WIN");
+        }
+        else
+        {
+            inGameUi.Lose();
+            //Debug.Log("LOSE");
+        }
+        channel.Disconnect();
+        StartCoroutine(LoadMenu());
+    }
+
+    private IEnumerator LoadMenu()
+    {
+        yield return new WaitForSeconds(10f);
+        SceneManager.LoadScene("Scene/MainMenu");
+    }
+
     private void SendInput()
     {
+        if(!join) return;
         ReadInput();
+        
         if (commandServer.Count != 0)
         {
             var packet2 = Packet.Obtain();
-            packet2.buffer.PutEnum(MessageCsType.messagetype.input, 5);
+            packet2.buffer.PutEnum(messagetype.input, quantityOfMessages);
             packet2.buffer.PutString(client.name);
             packet2.buffer.PutUInt(commandServer.Count);
             foreach (var currentCommand in commandServer)
@@ -180,8 +309,6 @@ public class CsClient : MonoBehaviour
     }
     
     
-
-
     private void AwaitJoinGame(Packet packet)
     {
         var quan = packet.buffer.GetBits(0, 50);
@@ -189,6 +316,7 @@ public class CsClient : MonoBehaviour
         {
             var enemyClient = Instantiate(ClientPrefab, new Vector3(3, 0.5f, 0), Quaternion.identity);
             enemyClient.name =  packet.buffer.GetString();
+            enemyClient.tag = "Enemy";
             enemyClient.GetComponent<PlayerId>().Id = enemyClient.name;
             //enemyClient.GetComponent<MeshRenderer>().material = material;
             clients.Add(enemyClient.name, enemyClient);  
@@ -205,6 +333,7 @@ public class CsClient : MonoBehaviour
         {
             if (commandServer[0].commandNumber <= toDel)
             {
+                Debug.Log("REMOVE OK" + commandServer[0].commandNumber);
                 commandServer.RemoveAt(0);
             }
             else
@@ -221,75 +350,149 @@ public class CsClient : MonoBehaviour
         var buffer = packet.buffer;
         var snapshot = new Snapshot(-1);
         snapshot.Deserialize(buffer);
-        
+        if (snapshot.life != 0 && isDead)
+        {
+            client.transform.position = snapshot.playerEntities[client.name].position;
+            isDead = false;
+        } 
+        life = snapshot.life;
+        inGameUi.setLife(life.ToString());
+        inGameUi.setKills(snapshot.kills.ToString());
+        //Debug.Log(snapshot.life);
         int size = interpolationBuffer.Count;
         if((size == 0 || snapshot.packetNumber > interpolationBuffer[size - 1].packetNumber) && size < requiredSnapshots + 1 ) {
             interpolationBuffer.Add(snapshot);
+            startInterp = true;
         }
     }
 
     private void InterpolateAndConciliate()
     {
-        while (interpolationBuffer.Count >= requiredSnapshots) {
-            Interpolate();
-            Conciliate();
+        if(interpolationBuffer.Count >= requiredSnapshots) clientTime += Time.deltaTime;
+        while ( Interpolate())
+        {
         }
+
+
+        
+
     }
     
-    private void Interpolate() 
+    private bool Interpolate() 
     {
-        if (!join) return;
-        var previousTime = (interpolationBuffer[0]).packetNumber * (1f/pps);
-        var nextTime =  interpolationBuffer[1].packetNumber * (1f/pps);
+        if (!join) return false;
+        if (interpolationBuffer.Count < requiredSnapshots) return false;
+        var previousTime = ((interpolationBuffer[0]).packetNumber) * (1f/(pps));
+        var nextTime =  (interpolationBuffer[1].packetNumber) * (1f/(pps));
         var t =  (clientTime - previousTime) / (nextTime - previousTime); 
         var interpolatedSnapshot = Snapshot.CreateInterpolated(interpolationBuffer[0], interpolationBuffer[1], t, clients, client.name);
         interpolatedSnapshot.Apply();
+        
+        //Debug.Log("PREV TIME" + previousTime);
+        //Debug.Log("CLIENT TIME" + clientTime);
+        //Debug.Log("NEXt TIME" + nextTime);
 
         if (clientTime > nextTime) {
             interpolationBuffer.RemoveAt(0);
+            return true;
         }
+        else
+        {
+            //Debug.Log("INTERP");
+            //Debug.Log("BUFFER" + interpolationBuffer.Count);
+        }
+
+        return false;
     }
 
     private void Conciliate()
     {
+        if(interpolationBuffer.Count < 1) return;
         var auxClient = interpolationBuffer[interpolationBuffer.Count - 1].playerEntities[client.name];
         conciliateGameObject.transform.position = auxClient.position;
         conciliateGameObject.transform.rotation = auxClient.rotation;
+        //Debug.Log("LIST COMMAND" + commandServer.Count);
         foreach (var auxCommand in commandServer)
         {
-            Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
+            if (auxCommand.commandNumber > interpolationBuffer[interpolationBuffer.Count - 1].lastCommand)
+            {
+                Execute(auxCommand, conciliateGameObject, conciliateCharacterController);
+            }
         }
 
         var svPos = conciliateGameObject.transform.position;
+        if(!firstConciliation) svPos.y = client.transform.position.y;
+        //var clPos = client.transform.position;
+        client.transform.position = svPos;
 
-        var yPos = Math.Abs(svPos.y - client.transform.position.y) > 4 ? svPos.y : client.transform.position.y; 
-        var clientPos = new Vector3( svPos.x, yPos, svPos.z);
-
-        client.transform.position = clientPos;
-        client.transform.rotation = conciliateGameObject.transform.rotation;
     }
 
     private void ReadInput()
     {
         var timeout = Time.time + 2;
+        Rotate(client, Input.GetAxis("Mouse X"));
         Command command = new Command(packetNumber, Input.GetAxis("Horizontal"),
-            Input.GetAxis("Vertical"), timeout,  Input.GetAxis("Mouse X"), 
-            Input.GetKey(KeyCode.Space), shooting, crouch);
-        commandServer.Add(command);
-        packetNumber++;
+            Input.GetAxis("Vertical"), timeout, 
+            Input.GetKey(KeyCode.Space), canShoot(shooting) , crouch, client.transform.rotation, Time.deltaTime);
+        if (!onReloadingCoolDown)
+        {
+            animator.SetBool("isJumping", isJumping(characterController));
+            animator.SetBool("shooting", shooting);
+            animator.SetBool("crouch", IsCrouch(command));
+            animator.SetBool("isWalking", VerticalMovePos(command));
+            animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
+            animator.SetBool("isWalkingRight", HorizontalMovePos(command));
+            animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
+        }
 
-        animator.SetBool("isJumping", isJumping(characterController));
-        animator.SetBool("shooting", IsShooting(command));
-        animator.SetBool("crouch", IsCrouch(command));
-        animator.SetBool("isWalking", VerticalMovePos(command));
-        animator.SetBool("isWalkingBackward", VerticalMoveNeg(command));
-        animator.SetBool("isWalkingRight", HorizontalMovePos(command));
-        animator.SetBool("isWalkingLeft", HorizontalMoveNeg(command));
-
-        Execute(command, client, characterController);
         LocalCameraRotate();
+        if (IsShooting(command))
+        {
+            audioSource.Play();
+            Shoot(command);
+        }
+
+        if (command.isSendable())
+        {
+            //Debug.Log("COMMANDO" + command.commandNumber);
+            Execute(command, client, characterController);
+            Debug.Log("CLIENT COMMAND" + packetNumber);
+            //packetNumber++;
+            StartCoroutine(addCommandoTolistWithLag(command));
+            //addCommandoTolist(command);
+            sendEmptyCommand = true;
+        } else if(sendEmptyCommand)
+        {
+            Debug.Log("CLIENT COMMAND" + packetNumber);
+            StartCoroutine(addCommandoTolistWithLag(command));
+            //commandServer.Add(command);
+            //packetNumber++;
+            sendEmptyCommand = false;
+        }
+        //Debug.Log("CLIENT" + packetNumber );
     }
 
+    private bool canShoot(bool shooting)
+    {
+        if (shooting && !onShootingCoolDown && !onReloadingCoolDown)
+        {
+            shootingCoolDown = 0;
+            onShootingCoolDown = true;
+            bullets--;
+            inGameUi.setAmmo(bullets.ToString());
+            if (bullets == 0)
+            {
+                animator.SetBool("isReloading", true);
+                animator.SetBool("shooting", false);
+                onReloadingCoolDown = true;
+                accumReloadingCoolDown = 0;
+            }
+            return true;
+        }
+
+        return false;
+
+    }
 
 
 
@@ -314,6 +517,39 @@ public class CsClient : MonoBehaviour
         currentRotation.x = Mathf.Clamp(currentRotation.x, upLimit, downLimit);
         cameraHolder.localRotation = Quaternion.Euler(currentRotation);
     }
-    
+    private void Shoot(Command command)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        RaycastHit[] allhHit = Physics.RaycastAll(ray).OrderBy(h=>h.distance).ToArray();
+        foreach (var hit in allhHit)
+        {
+            Debug.Log(hit.transform.name);
+            if (string.Compare(hit.transform.gameObject.tag, "Wall", StringComparison.Ordinal) == 0)
+            {
+                return;
+            }
+            if (string.Compare(hit.transform.gameObject.tag, "Enemy", StringComparison.Ordinal) == 0)
+            {
+                var damage = Vector3.Distance(hit.transform.position,hit.point) / 2;
+                command.hasHit = true;
+                command.damage = new Shoot(hit.transform.gameObject.name, (int) damage);
+            }
+        }
+        
+    }
 
+    private IEnumerator addCommandoTolistWithLag(Command command)
+    {
+        yield return new WaitForSeconds(delay);
+        Debug.Log("ADDing COMMAND" + command.commandNumber);
+        command.commandNumber = packetNumber;
+        commandServer.Add(command);
+        packetNumber++;
+    }
+    
+    private void addCommandoTolist(Command command)
+    {
+        commandServer.Add(command);
+        packetNumber++;
+    }
 }
